@@ -2,6 +2,16 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group/>
+        <group>
+            <file>file:/C:/Users/Curso%20Tarde/Documents/NetBeansProjects/JavaHerencia/src/model/Trabajador.java</file>
+            <file>file:/C:/Users/Curso%20Tarde/Documents/NetBeansProjects/JavaHerencia/data/informe.csv</file>
+            <file>file:/C:/Users/Curso%20Tarde/Documents/NetBeansProjects/JavaHerencia/src/principal/Principal.java</file>
+            <file>file:/C:/Users/Curso%20Tarde/Documents/NetBeansProjects/JavaHerencia/src/EscribirDatos/GuardarDatos.java</file>
+            <file>file:/C:/Users/Curso%20Tarde/Documents/NetBeansProjects/JavaHerencia/data/Conserje.csv</file>
+            <file>file:/C:/Users/Curso%20Tarde/Documents/NetBeansProjects/JavaHerencia/data/Funcionario.csv</file>
+            <file>file:/C:/Users/Curso%20Tarde/Documents/NetBeansProjects/JavaHerencia/src/model/Conserje.java</file>
+            <file>file:/C:/Users/Curso%20Tarde/Documents/NetBeansProjects/JavaHerencia/data/Libro1.csv</file>
+            <file>file:/C:/Users/Curso%20Tarde/Documents/NetBeansProjects/JavaHerencia/src/leerdatos/ObtenerDatos.java</file>
+        </group>
     </open-files>
 </project-private>
