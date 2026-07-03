@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mundial 2026 - Seguimiento en vivo</title>
+<style>
+  :root{
+    --bg:#0b1220; --bg2:#111a2e; --card:#151f38; --card2:#1b2748;
+    --text:#eef2ff; --muted:#9fb0d0; --accent:#22c55e; --accent2:#3b82f6;
+    --live:#ef4444; --border:#26345a; --gold:#eab308;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#f4f6fb; --bg2:#ffffff; --card:#ffffff; --card2:#f0f3fa;
+      --text:#101828; --muted:#5c6786; --accent:#16a34a; --accent2:#2563eb;
+      --live:#dc2626; --border:#e1e6f2; --gold:#b45309;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(180deg,var(--bg),var(--bg2) 400px); color:var(--text); min-height:100vh;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:16px 14px 60px;}
+  header{padding:18px 4px 8px;}
+  h1{font-size:1.5rem;margin:0 0 4px;display:flex;align-items:center;gap:10px;}
+  .sub{color:var(--muted);font-size:.85rem;}
+  .statusbar{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px;
+    background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;font-size:.82rem;
+  }
+  .statusbar .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;}
+  .statusbar .dot.syncing{background:var(--gold);animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  button{
+    font:inherit;cursor:pointer;background:var(--accent2);color:#fff;border:none;border-radius:8px;
+    padding:7px 12px;font-size:.82rem;
+  }
+  button.ghost{background:transparent;color:var(--text);border:1px solid var(--border);}
+  button:disabled{opacity:.5;cursor:default;}
+  progress{width:100%;height:6px;accent-color:var(--accent2);}
+  nav.tabs{display:flex;gap:6px;margin:16px 0 12px;border-bottom:1px solid var(--border);}
+  nav.tabs button{
+    background:none;color:var(--muted);border:none;border-bottom:2px solid transparent;
+    border-radius:0;padding:9px 6px;font-weight:600;font-size:.9rem;
+  }
+  nav.tabs button.active{color:var(--text);border-bottom-color:var(--accent2);}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  .controls input[type=text], .controls select{
+    background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:8px;
+    padding:8px 10px;font-size:.85rem;
+  }
+  .day-group{margin-bottom:22px;}
+  .day-title{
+    font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
+    margin:0 0 8px 2px;font-weight:700;
+  }
+  .match{
+    background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:8px;
+    cursor:pointer;transition:border-color .15s;
+  }
+  .match:hover{border-color:var(--accent2);}
+  .match-top{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.72rem;color:var(--muted);margin-bottom:8px;}
+  .badge-status{padding:2px 8px;border-radius:20px;font-weight:700;font-size:.68rem;letter-spacing:.03em;}
+  .badge-status.live{background:var(--live);color:#fff;}
+  .badge-status.ft{background:var(--card2);color:var(--muted);}
+  .badge-status.ns{background:var(--accent2);color:#fff;}
+  .teams{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .team{display:flex;align-items:center;gap:8px;flex:1;min-width:0;}
+  .team.away{flex-direction:row-reverse;text-align:right;}
+  .team img{width:26px;height:26px;object-fit:contain;flex-shrink:0;}
+  .team span{font-weight:600;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .score{font-weight:800;font-size:1.15rem;min-width:64px;text-align:center;flex-shrink:0;}
+  .venue-line{margin-top:8px;font-size:.72rem;color:var(--muted);}
+  .timeline{
+    margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);font-size:.82rem;display:none;
+  }
+  .timeline.open{display:block;}
+  .tl-row{display:flex;gap:8px;align-items:center;padding:3px 0;}
+  .tl-min{color:var(--muted);width:34px;flex-shrink:0;font-variant-numeric:tabular-nums;}
+  .tl-icon{width:16px;text-align:center;}
+  .tl-loading{color:var(--muted);font-style:italic;}
+  table.standings{width:100%;border-collapse:collapse;font-size:.82rem;}
+  table.standings th, table.standings td{padding:6px 6px;text-align:center;border-bottom:1px solid var(--border);}
+  table.standings th:first-child, table.standings td:first-child{text-align:left;}
+  table.standings td.team-cell{display:flex;align-items:center;gap:6px;text-align:left;}
+  table.standings td.team-cell img{width:18px;height:18px;object-fit:contain;}
+  .group-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;}
+  .group-card h3{margin:0 0 10px;font-size:.95rem;}
+  .qual-line{border-top:2px solid var(--accent);}
+  .scorers-list{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+  .scorer-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);}
+  .scorer-row:last-child{border-bottom:none;}
+  .scorer-rank{width:22px;color:var(--muted);font-weight:700;font-size:.82rem;}
+  .scorer-name{flex:1;font-weight:600;font-size:.88rem;}
+  .scorer-team{color:var(--muted);font-size:.76rem;}
+  .scorer-goals{font-weight:800;color:var(--accent);}
+  .empty{color:var(--muted);text-align:center;padding:30px 10px;font-size:.88rem;}
+  footer{margin-top:34px;color:var(--muted);font-size:.72rem;text-align:center;line-height:1.6;}
+  a{color:var(--accent2);}
+  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🏆 Mundial 2026 — Seguimiento en vivo</h1>
+    <div class="sub">Canadá · Estados Unidos · México — 11 jun al 19 jul 2026</div>
+    <div class="statusbar">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Iniciando...</span>
+      <span style="flex:1"></span>
+      <button class="ghost" id="btnRefresh">Actualizar ahora</button>
+      <label style="display:flex;align-items:center;gap:5px;color:var(--muted);font-size:.8rem;">
+        <input type="checkbox" id="autoToggle" checked> Auto
+      </label>
+    </div>
+    <progress id="syncProgress" value="0" max="1" style="margin-top:8px;"></progress>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="partidos" class="active">Partidos</button>
+    <button data-tab="tabla">Tabla de posiciones</button>
+    <button data-tab="goleadores">Goleadores</button>
+  </nav>
+
+  <section id="tab-partidos">
+    <div class="controls">
+      <input type="text" id="searchTeam" placeholder="Buscar selección...">
+      <select id="filterStatus">
+        <option value="all">Todos los partidos</option>
+        <option value="live">En vivo</option>
+        <option value="played">Jugados</option>
+        <option value="upcoming">Por jugar</option>
+      </select>
+      <select id="filterGroup">
+        <option value="all">Todas las fases</option>
+      </select>
+    </div>
+    <div id="matchesContainer"><div class="empty">Cargando calendario del torneo...</div></div>
+  </section>
+
+  <section id="tab-tabla" style="display:none;">
+    <div id="standingsContainer"><div class="empty">Cargando...</div></div>
+  </section>
+
+  <section id="tab-goleadores" style="display:none;">
+    <div class="controls" style="margin-bottom:10px;">
+      <span class="sub" id="scorersProgress"></span>
+    </div>
+    <div id="scorersContainer"><div class="empty">Cargando...</div></div>
+  </section>
+
+  <footer>
+    Datos: <a href="https://www.thesportsdb.com" target="_blank">TheSportsDB</a> (API pública). Se auto-actualiza cada
+    <span id="refreshSecs">90</span> segundos. La clave gratuita usada aquí puede tener cobertura incompleta o
+    retrasos frente a la fuente oficial de FIFA; los resultados y goleadores se muestran "mejor esfuerzo" y deben
+    contrastarse en caso de duda. Última sincronización completa: <span id="lastFullSync">—</span>.
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Config ----------
+  var API_KEY = "3"; // clave de prueba pública de TheSportsDB. Cambiar por una clave Patreon/API-Football para cobertura 100% completa.
+  var BASE = "https://www.thesportsdb.com/api/v1/json/" + API_KEY;
+  var LEAGUE_ID = "4429"; // FIFA World Cup
+  var SEASON = "2026";
+  var TOURNAMENT_START = "2026-06-11";
+  var TOURNAMENT_END = "2026-07-19";
+  var REFRESH_INTERVAL_MS = 90000;
+  var THROTTLE_MS = 380;
+  var CACHE_KEY = "wc2026_tracker_cache_v1";
+  var FINISHED = ["FT","AET","PEN","AP","FT_PEN"];
+
+  // ---------- Request queue (throttled, with 429 backoff) ----------
+  var queue = [];
+  var queueRunning = false;
+  function enqueue(url){
+    return new Promise(function(resolve, reject){
+      queue.push({url: url, resolve: resolve, reject: reject, retries: 0});
+      runQueue();
+    });
+  }
+  var REQUEST_TIMEOUT_MS = 12000;
+  function fetchWithTimeout(url){
+    var controller = new AbortController();
+    var timer = setTimeout(function(){ controller.abort(); }, REQUEST_TIMEOUT_MS);
+    return fetch(url, { signal: controller.signal }).finally(function(){ clearTimeout(timer); });
+  }
+  function runQueue(){
+    if (queueRunning) return;
+    queueRunning = true;
+    step();
+    function step(){
+      if (!queue.length){ queueRunning = false; return; }
+      var job = queue.shift();
+      fetchWithTimeout(job.url).then(function(r){
+        if (r.status === 429){
+          job.retries++;
+          if (job.retries <= 4){
+            var wait = Math.min(8000, 1000 * Math.pow(2, job.retries));
+            setTimeout(function(){ queue.unshift(job); setTimeout(step, wait); }, 0);
+            return;
+          }
+          job.resolve(null);
+          setTimeout(step, THROTTLE_MS);
+          return;
+        }
+        if (!r.ok){ job.resolve(null); setTimeout(step, THROTTLE_MS); return; }
+        r.json().then(function(data){ job.resolve(data); setTimeout(step, THROTTLE_MS); })
+                 .catch(function(){ job.resolve(null); setTimeout(step, THROTTLE_MS); });
+      }).catch(function(){ job.resolve(null); setTimeout(step, THROTTLE_MS); });
+    }
+  }
+
+  // ---------- Cache ----------
+  var cache = loadCache();
+  function loadCache(){
+    try{
+      var raw = localStorage.getItem(CACHE_KEY);
+      if (raw) return JSON.parse(raw);
+    }catch(e){}
+    return { days: {}, timelines: {}, lastFullSync: null };
+  }
+  function saveCache(){
+    try{ localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); }catch(e){}
+  }
+
+  function dateRange(startISO, endISO){
+    var dates = [];
+    var d = new Date(startISO + "T00:00:00Z");
+    var end = new Date(endISO + "T00:00:00Z");
+    while (d <= end){
+      dates.push(d.toISOString().slice(0,10));
+      d.setUTCDate(d.getUTCDate() + 1);
+    }
+    return dates;
+  }
+  var ALL_DATES = dateRange(TOURNAMENT_START, TOURNAMENT_END);
+
+  function dayIsFinalized(dateStr){
+    var day = cache.days[dateStr];
+    if (!day || !day.events || !day.events.length) return false;
+    return day.events.every(function(e){ return FINISHED.indexOf(e.strStatus) !== -1; });
+  }
+
+  function fetchDay(dateStr){
+    var url = BASE + "/eventsday.php?l=" + LEAGUE_ID + "&d=" + dateStr;
+    return enqueue(url).then(function(data){
+      var events = (data && data.events) || [];
+      cache.days[dateStr] = { events: events, fetchedAt: Date.now() };
+      saveCache();
+      return events;
+    });
+  }
+
+  function allEvents(){
+    var out = [];
+    ALL_DATES.forEach(function(d){
+      var day = cache.days[d];
+      if (day && day.events) out = out.concat(day.events);
+    });
+    var seen = {};
+    return out.filter(function(e){
+      if (seen[e.idEvent]) return false;
+      seen[e.idEvent] = true;
+      return true;
+    });
+  }
+
+  // ---------- Sync ----------
+  var statusDot = document.getElementById("statusDot");
+  var statusText = document.getElementById("statusText");
+  var syncProgress = document.getElementById("syncProgress");
+
+  function setStatus(text, syncing){
+    statusText.textContent = text;
+    statusDot.className = "dot" + (syncing ? " syncing" : "");
+  }
+
+  function syncAllDays(force){
+    var todo = ALL_DATES.filter(function(d){ return force || !dayIsFinalized(d); });
+    syncProgress.max = todo.length || 1;
+    syncProgress.value = 0;
+    syncProgress.style.display = todo.length ? "block" : "none";
+    setStatus("Sincronizando calendario (" + todo.length + " días)...", true);
+    var i = 0;
+    function next(){
+      if (i >= todo.length){
+        syncProgress.style.display = "none";
+        cache.lastFullSync = Date.now();
+        saveCache();
+        document.getElementById("lastFullSync").textContent = new Date().toLocaleTimeString("es");
+        setStatus("Actualizado · " + new Date().toLocaleTimeString("es"), false);
+        renderAll();
+        syncScorersBackground();
+        return;
+      }
+      var d = todo[i];
+      fetchDay(d).then(function(){
+        i++;
+        syncProgress.value = i;
+        if (i % 5 === 0) renderAll();
+        next();
+      });
+    }
+    next();
+  }
+
+  // ---------- Round labeling ----------
+  function roundLabel(e){
+    if (e.strGroup) return "Fase de grupos · Jornada " + e.intRound + " · Grupo " + e.strGroup;
+    var r = String(e.intRound);
+    var map = { "32":"Ronda de 32 (dieciseisavos)", "16":"Octavos de final", "8":"Cuartos de final",
+                "4":"Semifinal", "2":"Final", "1":"Final" };
+    if (map[r]) return map[r];
+    if (/final/i.test(e.strEvent||"")) return "Final";
+    return "Fase eliminatoria";
+  }
+  function roundSortKey(e){
+    if (e.strGroup) return 100 + Number(e.intRound || 0);
+    var order = {"32":200, "16":300, "8":400, "4":500, "3":550, "2":600, "1":600};
+    return order[String(e.intRound)] || 250;
+  }
+
+  function statusInfo(e){
+    var s = e.strStatus;
+    if (FINISHED.indexOf(s) !== -1) return {label: s === "PEN" || s==="AP" ? "Final (penales)" : (s==="AET"?"Final (prórroga)":"Finalizado"), cls:"ft"};
+    if (s === "NS" || !s) return {label: (e.strTime||"").slice(0,5) || "Por jugar", cls:"ns"};
+    if (s === "PST") return {label:"Aplazado", cls:"ns"};
+    if (s === "CANC") return {label:"Cancelado", cls:"ns"};
+    return {label: s + "'", cls:"live"};
+  }
+
+  // ---------- Rendering: Partidos ----------
+  var matchesContainer = document.getElementById("matchesContainer");
+  var searchTeam = document.getElementById("searchTeam");
+  var filterStatus = document.getElementById("filterStatus");
+  var filterGroup = document.getElementById("filterGroup");
+
+  function populateGroupFilter(events){
+    var groups = {};
+    events.forEach(function(e){ if (e.strGroup) groups["Grupo " + e.strGroup] = true; });
+    var current = filterGroup.value;
+    var opts = ['<option value="all">Todas las fases</option>'];
+    Object.keys(groups).sort().forEach(function(g){ opts.push('<option value="'+g+'">'+g+'</option>'); });
+    opts.push('<option value="knockout">Fase eliminatoria</option>');
+    filterGroup.innerHTML = opts.join("");
+    filterGroup.value = current || "all";
+  }
+
+  function renderMatches(){
+    var events = allEvents().slice().sort(function(a,b){
+      var ka = a.dateEvent + (a.strTime||""), kb = b.dateEvent + (b.strTime||"");
+      return ka.localeCompare(kb);
+    });
+    populateGroupFilter(events);
+
+    var term = searchTeam.value.trim().toLowerCase();
+    var statusF = filterStatus.value;
+    var groupF = filterGroup.value;
+
+    var filtered = events.filter(function(e){
+      if (term && !( (e.strHomeTeam||"").toLowerCase().indexOf(term) !== -1 ||
+                      (e.strAwayTeam||"").toLowerCase().indexOf(term) !== -1)) return false;
+      var fin = FINISHED.indexOf(e.strStatus) !== -1;
+      var live = !fin && e.strStatus && e.strStatus !== "NS" && e.strStatus !== "PST" && e.strStatus !== "CANC";
+      if (statusF === "played" && !fin) return false;
+      if (statusF === "upcoming" && (fin || live)) return false;
+      if (statusF === "live" && !live) return false;
+      if (groupF !== "all"){
+        if (groupF === "knockout" && e.strGroup) return false;
+        if (groupF !== "knockout" && ("Grupo " + e.strGroup) !== groupF) return false;
+      }
+      return true;
+    });
+
+    if (!filtered.length){
+      matchesContainer.innerHTML = events.length
+        ? '<div class="empty">No hay partidos que coincidan con el filtro.</div>'
+        : '<div class="empty">Todavía no se han podido cargar datos. Comprueba tu conexión — la app reintentará automáticamente.</div>';
+      return;
+    }
+
+    var byDate = {};
+    var order = [];
+    filtered.forEach(function(e){
+      if (!byDate[e.dateEvent]){ byDate[e.dateEvent] = []; order.push(e.dateEvent); }
+      byDate[e.dateEvent].push(e);
+    });
+
+    var html = "";
+    order.forEach(function(date){
+      var dObj = new Date(date + "T12:00:00Z");
+      var label = dObj.toLocaleDateString("es", {weekday:"long", day:"numeric", month:"long", year:"numeric"});
+      html += '<div class="day-group"><div class="day-title">' + label + '</div>';
+      byDate[date].forEach(function(e){ html += matchCardHTML(e); });
+      html += '</div>';
+    });
+    matchesContainer.innerHTML = html;
+
+    matchesContainer.querySelectorAll(".match").forEach(function(el){
+      el.addEventListener("click", function(){ toggleTimeline(el, el.dataset.id); });
+    });
+  }
+
+  function matchCardHTML(e){
+    var st = statusInfo(e);
+    var hs = e.intHomeScore != null ? e.intHomeScore : "-";
+    var as = e.intAwayScore != null ? e.intAwayScore : "-";
+    var score = (e.intHomeScore == null && e.intAwayScore == null) ? "vs" : (hs + " - " + as);
+    return '' +
+    '<div class="match" data-id="' + e.idEvent + '">' +
+      '<div class="match-top">' +
+        '<span>' + roundLabel(e) + '</span>' +
+        '<span class="badge-status ' + st.cls + '">' + st.label + '</span>' +
+      '</div>' +
+      '<div class="teams">' +
+        '<div class="team home">' + teamImg(e.strHomeTeamBadge) + '<span>' + e.strHomeTeam + '</span></div>' +
+        '<div class="score">' + score + '</div>' +
+        '<div class="team away">' + teamImg(e.strAwayTeamBadge) + '<span>' + e.strAwayTeam + '</span></div>' +
+      '</div>' +
+      '<div class="venue-line">' + (e.strVenue ? e.strVenue + (e.strCity ? " · " + e.strCity : "") : "") + '</div>' +
+      '<div class="timeline" id="tl-' + e.idEvent + '"></div>' +
+    '</div>';
+  }
+  function teamImg(url){
+    return '<img loading="lazy" src="' + (url||"") + '" onerror="this.style.visibility=\'hidden\'" alt="">';
+  }
+
+  function toggleTimeline(matchEl, eventId){
+    var tl = document.getElementById("tl-" + eventId);
+    var isOpen = tl.classList.contains("open");
+    if (isOpen){ tl.classList.remove("open"); return; }
+    tl.classList.add("open");
+    if (cache.timelines[eventId]){
+      tl.innerHTML = timelineHTML(cache.timelines[eventId]);
+      return;
+    }
+    tl.innerHTML = '<div class="tl-loading">Cargando detalle del partido...</div>';
+    enqueue(BASE + "/lookuptimeline.php?id=" + eventId).then(function(data){
+      var items = (data && data.timeline) || [];
+      cache.timelines[eventId] = items;
+      saveCache();
+      tl.innerHTML = timelineHTML(items);
+    });
+  }
+
+  function timelineHTML(items){
+    if (!items.length) return '<div class="tl-loading">Sin detalle disponible para este partido.</div>';
+    var iconFor = { "Goal":"⚽", "Card":"🟨", "subst":"🔁" };
+    var sorted = items.slice().sort(function(a,b){ return Number(a.intTime) - Number(b.intTime); });
+    return sorted.map(function(t){
+      var icon = iconFor[t.strTimeline] || "•";
+      if (t.strTimeline === "Card" && t.strTimelineDetail === "Red Card") icon = "🟥";
+      var text = t.strPlayer || "";
+      if (t.strTimeline === "Goal"){
+        text += t.strTimelineDetail && /penalty/i.test(t.strTimelineDetail) ? " (penal)" : "";
+        text += t.strTimelineDetail && /own/i.test(t.strTimelineDetail) ? " (en propia puerta)" : "";
+        if (t.strAssist) text += " — asist. " + t.strAssist;
+      } else if (t.strTimeline === "subst"){
+        text = (t.strAssist || "") + " ⟶ " + text;
+      }
+      return '<div class="tl-row"><span class="tl-min">' + (t.intTime||"") + "'</span>" +
+             '<span class="tl-icon">' + icon + '</span>' +
+             '<span>' + text + ' <span style="color:var(--muted)">(' + t.strTeam + ')</span></span></div>';
+    }).join("");
+  }
+
+  // ---------- Rendering: Standings (computed from group-stage results) ----------
+  function renderStandings(){
+    var events = allEvents().filter(function(e){ return e.strGroup; });
+    var groups = {};
+    events.forEach(function(e){
+      var g = e.strGroup;
+      if (!groups[g]) groups[g] = { teams: {}, };
+      ensureTeam(groups[g], e.idHomeTeam, e.strHomeTeam, e.strHomeTeamBadge);
+      ensureTeam(groups[g], e.idAwayTeam, e.strAwayTeam, e.strAwayTeamBadge);
+      if (FINISHED.indexOf(e.strStatus) !== -1 && e.intHomeScore != null && e.intAwayScore != null){
+        applyResult(groups[g].teams[e.idHomeTeam], groups[g].teams[e.idAwayTeam],
+                    Number(e.intHomeScore), Number(e.intAwayScore));
+      }
+    });
+
+    var container = document.getElementById("standingsContainer");
+    var groupKeys = Object.keys(groups).sort();
+    if (!groupKeys.length){
+      container.innerHTML = '<div class="empty">Aún no hay datos de fase de grupos disponibles.</div>';
+      return;
+    }
+    var html = "";
+    groupKeys.forEach(function(g){
+      var rows = Object.values(groups[g].teams).sort(function(a,b){
+        return b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.name.localeCompare(b.name);
+      });
+      html += '<div class="group-card"><h3>Grupo ' + g + '</h3><table class="standings">' +
+        '<thead><tr><th>Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>';
+      rows.forEach(function(t, idx){
+        html += '<tr class="' + (idx===1 ? "qual-line":"") + '"><td class="team-cell">' + teamImg(t.badge) +
+          '<span>' + t.name + '</span></td><td>' + t.pj + '</td><td>' + t.w + '</td><td>' + t.d + '</td><td>' + t.l +
+          '</td><td>' + t.gf + '</td><td>' + t.ga + '</td><td>' + (t.gd>0?"+":"") + t.gd + '</td><td><b>' + t.pts + '</b></td></tr>';
+      });
+      html += '</tbody></table></div>';
+    });
+    html += '<div class="sub" style="text-align:center;margin-top:6px;">Clasificación calculada a partir de los resultados disponibles. Desempates simplificados (Pts, DG, GF); no incluye head-to-head oficial.</div>';
+    container.innerHTML = html;
+  }
+  function ensureTeam(group, id, name, badge){
+    if (!group.teams[id]) group.teams[id] = { id:id, name:name, badge:badge, pj:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0 };
+  }
+  function applyResult(home, away, hs, as){
+    home.pj++; away.pj++;
+    home.gf += hs; home.ga += as; away.gf += as; away.ga += hs;
+    home.gd = home.gf - home.ga; away.gd = away.gf - away.ga;
+    if (hs > as){ home.w++; home.pts += 3; away.l++; }
+    else if (hs < as){ away.w++; away.pts += 3; home.l++; }
+    else { home.d++; away.d++; home.pts++; away.pts++; }
+  }
+
+  // ---------- Rendering: Goleadores ----------
+  function renderScorers(){
+    var goals = {};
+    Object.keys(cache.timelines).forEach(function(eventId){
+      (cache.timelines[eventId] || []).forEach(function(t){
+        if (t.strTimeline !== "Goal") return;
+        if (t.strTimelineDetail && /missed/i.test(t.strTimelineDetail)) return;
+        var key = t.strPlayer + "|" + t.strTeam;
+        if (!goals[key]) goals[key] = { player:t.strPlayer, team:t.strTeam, goals:0 };
+        goals[key].goals++;
+      });
+    });
+    var list = Object.values(goals).sort(function(a,b){ return b.goals - a.goals || a.player.localeCompare(b.player); });
+    var container = document.getElementById("scorersContainer");
+    if (!list.length){
+      container.innerHTML = '<div class="empty">Aún no hay goleadores cargados. Se están sincronizando los detalles de los partidos finalizados en segundo plano...</div>';
+      return;
+    }
+    container.innerHTML = '<div class="scorers-list">' + list.map(function(s, i){
+      return '<div class="scorer-row"><span class="scorer-rank">' + (i+1) + '</span>' +
+        '<span class="scorer-name">' + s.player + ' <span class="scorer-team">· ' + s.team + '</span></span>' +
+        '<span class="scorer-goals">' + s.goals + '</span></div>';
+    }).join("") + '</div>';
+  }
+
+  var scorersQueueRunning = false;
+  function syncScorersBackground(){
+    if (scorersQueueRunning) return;
+    scorersQueueRunning = true;
+    var finished = allEvents().filter(function(e){ return FINISHED.indexOf(e.strStatus) !== -1; });
+    var todo = finished.filter(function(e){ return !cache.timelines[e.idEvent]; });
+    var total = todo.length, done = 0;
+    var prog = document.getElementById("scorersProgress");
+    function updateProg(){
+      prog.textContent = total ? ("Sincronizando goleadores: " + done + "/" + total) : "";
+    }
+    updateProg();
+    function next(){
+      if (!todo.length){ scorersQueueRunning = false; prog.textContent = ""; renderScorers(); return; }
+      var e = todo.shift();
+      enqueue(BASE + "/lookuptimeline.php?id=" + e.idEvent).then(function(data){
+        cache.timelines[e.idEvent] = (data && data.timeline) || [];
+        saveCache();
+        done++;
+        updateProg();
+        if (done % 4 === 0) renderScorers();
+        next();
+      });
+    }
+    next();
+  }
+
+  // ---------- Tabs ----------
+  document.querySelectorAll("nav.tabs button").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll("nav.tabs button").forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      ["partidos","tabla","goleadores"].forEach(function(t){
+        document.getElementById("tab-" + t).style.display = (t === btn.dataset.tab) ? "block" : "none";
+      });
+      renderAll();
+    });
+  });
+
+  function renderAll(){
+    renderMatches();
+    renderStandings();
+    renderScorers();
+  }
+
+  searchTeam.addEventListener("input", renderMatches);
+  filterStatus.addEventListener("change", renderMatches);
+  filterGroup.addEventListener("change", renderMatches);
+  document.getElementById("btnRefresh").addEventListener("click", function(){ syncAllDays(false); });
+
+  document.getElementById("refreshSecs").textContent = Math.round(REFRESH_INTERVAL_MS/1000);
+
+  var autoToggle = document.getElementById("autoToggle");
+  var timer = null;
+  function scheduleAuto(){
+    if (timer) clearInterval(timer);
+    timer = setInterval(function(){
+      if (autoToggle.checked) syncAllDays(false);
+    }, REFRESH_INTERVAL_MS);
+  }
+  scheduleAuto();
+
+  // ---------- Boot ----------
+  renderAll();
+  if (cache.lastFullSync){
+    document.getElementById("lastFullSync").textContent = new Date(cache.lastFullSync).toLocaleTimeString("es");
+  }
+  syncAllDays(false);
+
+})();
+</script>
+</body>
+</html>
