@@ -1,30 +1,48 @@
-# Mundial 2026 — Seguimiento en vivo
+# Mundial 2026 — Seguimiento en directo
 
-Página web autocontenida (`index.html`, sin dependencias ni build) que muestra todos los
-partidos del Mundial 2026 — jugados, en vivo y por jugar —, goles y goleadores con minuto y
-asistencia, tarjetas, y tabla de posiciones por grupo calculada en tiempo real. Se actualiza
-sola cada 90 segundos mientras la tengas abierta en el navegador (o al pulsar "Actualizar ahora").
+Página web autocontenida (`index.html`, sin dependencias ni build), **100 % en castellano**, que
+muestra todos los partidos del Mundial 2026 — jugados, en directo y por jugar —, con goles (autor,
+minuto y asistente), tarjetas, tabla de posiciones por grupo calculada en tiempo real, y clasificaciones
+de **goleadores** y **asistentes**. Se actualiza sola cada 90 segundos mientras la tengas abierta en el
+navegador (o al pulsar el botón ↻).
+
+## Características
+
+- **Datos oficiales de la FIFA**, con nombres de selecciones en español y bandera de cada país.
+- **Panel de cifras**: partidos jugados, goles marcados, media de goles por partido y nº de selecciones.
+- **Partidos** (los 104) agrupados por día, con marcador, sede y estado (los partidos en directo se
+  resaltan en rojo). Toca un partido para ver su detalle: goles con asistencia y tarjetas minuto a minuto,
+  más la **“figura del partido” calculada** (ver nota abajo).
+- **Grupos**: los 12 grupos con su clasificación (PJ, G, E, P, GF, GC, DG, Pts), racha de forma y
+  puestos de clasificación resaltados.
+- **Goleadores** y **Asistentes**: rankings con barra proporcional y podio (oro/plata/bronce).
+- **Instantánea incorporada**: la app trae datos reales precargados, así se ve poblada al instante y
+  funciona aunque no haya red; cuando hay conexión, se actualiza en directo por encima de esa base.
+- **Tema oscuro por defecto** con botón para cambiar a claro (la preferencia se recuerda).
+
+### Sobre el "mejor jugador del partido"
+
+El premio oficial al mejor jugador del partido **no lo publican ni la FIFA (en sus datos abiertos) ni
+periódicos como AS** (que solo ofrecen titulares, no datos de partido reutilizables). Para no inventarlo,
+en su lugar se muestra una **“figura del partido” calculada** a partir de los goles y asistencias de cada
+jugador en ese encuentro, claramente etiquetada como calculada (no es el premio oficial).
 
 ## Cómo usarla
 
-Solo abre `index.html` en cualquier navegador (doble clic, o `python3 -m http.server` en esta
-carpeta y entrar a `http://localhost:8000`). No requiere instalación, servidor ni API key propia
-para empezar a funcionar.
+Abre `index.html` en cualquier navegador (doble clic, o `python3 -m http.server` en esta carpeta y
+entra a `http://localhost:8000`). No requiere instalación, servidor ni clave de API propia.
 
 ## Fuente de datos
 
-Usa la API pública de [TheSportsDB](https://www.thesportsdb.com) con su clave de prueba gratuita.
-Para evitar el límite de "5 resultados por consulta" de esa clave, la app recorre día por día todo
-el calendario del torneo (11 jun – 19 jul 2026) y combina los resultados, en vez de pedir el
-calendario completo de una sola vez.
+Usa la **API pública oficial de la FIFA** (`api.fifa.com`, competición `17`, temporada `285023` = Mundial
+2026), que admite peticiones desde el navegador (CORS abierto). La app pide el calendario completo (104
+partidos) en una sola llamada y el detalle de cada partido (goles, asistencias, tarjetas) bajo demanda.
 
 **Cobertura y limitaciones:**
-- Con la clave gratuita puede haber partidos, goles o eventos no disponibles todavía en la base de
-  datos de TheSportsDB, sobre todo justo después de terminar un partido.
-- La clave está en `API_KEY` al inicio del `<script>` de `index.html`. Si más adelante consigues una
-  clave de pago (TheSportsDB Patreon, desde 3 USD/mes) solo tienes que reemplazar ese valor — el
-  resto del código no cambia y la cobertura pasa a ser completa.
-- Los datos son "mejor esfuerzo": para resultados oficiales, contrasta con FIFA.com.
+- Es una API no documentada de la FIFA; su estructura podría cambiar en el futuro.
+- Justo al terminar un partido, algún gol o dato puede tardar unos minutos en reflejarse.
+- Los identificadores de competición/temporada están al inicio del `<script>` de `index.html`
+  (`CID` y `SID`), por si hubiera que ajustarlos.
 
 ## Estructura
 
