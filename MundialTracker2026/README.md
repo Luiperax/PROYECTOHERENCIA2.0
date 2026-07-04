@@ -1,9 +1,25 @@
-# Mundial 2026 — Seguimiento en vivo
+# Mundial 2026 — Seguimiento en directo
 
-Página web autocontenida (`index.html`, sin dependencias ni build) que muestra todos los
-partidos del Mundial 2026 — jugados, en vivo y por jugar —, goles y goleadores con minuto y
-asistencia, tarjetas, y tabla de posiciones por grupo calculada en tiempo real. Se actualiza
-sola cada 90 segundos mientras la tengas abierta en el navegador (o al pulsar "Actualizar ahora").
+Página web autocontenida (`index.html`, sin dependencias ni build), **100 % en castellano**, que
+muestra todos los partidos del Mundial 2026 — jugados, en directo y por jugar —, con goles (autor,
+minuto y asistente), tarjetas, tabla de posiciones por grupo calculada en tiempo real, y clasificaciones
+de **goleadores** y **asistentes**. Se actualiza sola cada 90 segundos mientras la tengas abierta en el
+navegador (o al pulsar "Actualizar").
+
+## Características
+
+- **Nombres de selecciones en español** con bandera (Brasil, Países Bajos, Costa de Marfil…).
+- **Panel de cifras**: partidos jugados, goles marcados, media de goles por partido y nº de selecciones.
+- **Partidos** agrupados por día, con marcador, sede y estado (los partidos en directo se resaltan en rojo).
+  Toca un partido para ver su detalle: goles con asistencia, tarjetas y cambios minuto a minuto.
+- **Grupos**: los 12 grupos con su clasificación (PJ, PG, PE, PP, GF, GC, DG, Pts), racha de forma y
+  puestos de clasificación resaltados.
+- **Goleadores** y **Asistentes**: rankings con barra proporcional y podio (oro/plata/bronce).
+- **Instantánea incorporada**: la app trae datos reales precargados, así se ve poblada al instante y
+  funciona aunque no haya red; cuando hay conexión, se actualiza en directo por encima de esa base.
+- **Tema claro y oscuro** automático según el sistema.
+
+> Nota: el dato de *mejor jugador del partido* no lo ofrece esta fuente de datos, por eso no aparece.
 
 ## Cómo usarla
 

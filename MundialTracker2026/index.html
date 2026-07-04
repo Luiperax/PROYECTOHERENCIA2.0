@@ -3,617 +3,698 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mundial 2026 - Seguimiento en vivo</title>
+<title>Mundial 2026 · Seguimiento en directo</title>
 <style>
   :root{
-    --bg:#0b1220; --bg2:#111a2e; --card:#151f38; --card2:#1b2748;
-    --text:#eef2ff; --muted:#9fb0d0; --accent:#22c55e; --accent2:#3b82f6;
-    --live:#ef4444; --border:#26345a; --gold:#eab308;
+    color-scheme: light dark;
+    --ink:#0a1626; --panel:#0f2137; --panel2:#14294480; --raise:#16305233;
+    --line:#22406b; --text:#eef4fc; --muted:#93a9cb;
+    --grass:#1fc17a; --grass-soft:#1fc17a26; --gold:#f5b740; --gold-soft:#f5b74022;
+    --live:#ff4d6d; --live-soft:#ff4d6d1f; --silver:#c7d2e0; --bronze:#d68a5b;
+    --shadow:0 10px 30px -12px #00000080; --radius:16px;
   }
+  :root[data-theme="light"], :root:not([data-theme="dark"]){}
   @media (prefers-color-scheme: light){
     :root{
-      --bg:#f4f6fb; --bg2:#ffffff; --card:#ffffff; --card2:#f0f3fa;
-      --text:#101828; --muted:#5c6786; --accent:#16a34a; --accent2:#2563eb;
-      --live:#dc2626; --border:#e1e6f2; --gold:#b45309;
+      --ink:#eef2f8; --panel:#ffffff; --panel2:#f4f7fc; --raise:#f0f4fa;
+      --line:#dbe3ef; --text:#0d1c30; --muted:#5a6c88;
+      --grass:#0f9d63; --grass-soft:#0f9d6314; --gold:#c6870f; --gold-soft:#c6870f14;
+      --live:#e01e47; --live-soft:#e01e470f; --silver:#7c8aa0; --bronze:#b06a3a;
+      --shadow:0 12px 34px -16px #21365a33;
     }
   }
+  :root[data-theme="light"]{
+    --ink:#eef2f8; --panel:#ffffff; --panel2:#f4f7fc; --raise:#f0f4fa;
+    --line:#dbe3ef; --text:#0d1c30; --muted:#5a6c88;
+    --grass:#0f9d63; --grass-soft:#0f9d6314; --gold:#c6870f; --gold-soft:#c6870f14;
+    --live:#e01e47; --live-soft:#e01e470f; --silver:#7c8aa0; --bronze:#b06a3a;
+    --shadow:0 12px 34px -16px #21365a33;
+  }
+  :root[data-theme="dark"]{
+    --ink:#0a1626; --panel:#0f2137; --panel2:#14294480; --raise:#16305233;
+    --line:#22406b; --text:#eef4fc; --muted:#93a9cb;
+    --grass:#1fc17a; --grass-soft:#1fc17a26; --gold:#f5b740; --gold-soft:#f5b74022;
+    --live:#ff4d6d; --live-soft:#ff4d6d1f; --silver:#c7d2e0; --bronze:#d68a5b;
+    --shadow:0 10px 30px -12px #00000080;
+  }
+
   *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
   body{
-    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:linear-gradient(180deg,var(--bg),var(--bg2) 400px); color:var(--text); min-height:100vh;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(1200px 500px at 80% -10%, var(--grass-soft), transparent 60%),
+      radial-gradient(900px 400px at -10% 0%, var(--gold-soft), transparent 55%),
+      var(--ink);
+    color:var(--text); min-height:100vh; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:1000px;margin:0 auto;padding:16px 14px 60px;}
-  header{padding:18px 4px 8px;}
-  h1{font-size:1.5rem;margin:0 0 4px;display:flex;align-items:center;gap:10px;}
-  .sub{color:var(--muted);font-size:.85rem;}
-  .statusbar{
-    display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px;
-    background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;font-size:.82rem;
+  .wrap{max-width:1040px;margin:0 auto;padding:0 16px 72px;}
+
+  /* Header */
+  header.top{
+    position:sticky; top:0; z-index:20;
+    backdrop-filter:saturate(1.4) blur(12px);
+    background:color-mix(in srgb, var(--ink) 82%, transparent);
+    border-bottom:1px solid var(--line);
+    margin:0 -16px 0; padding:12px 16px;
   }
-  .statusbar .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;}
-  .statusbar .dot.syncing{background:var(--gold);animation:pulse 1s infinite;}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-  button{
-    font:inherit;cursor:pointer;background:var(--accent2);color:#fff;border:none;border-radius:8px;
-    padding:7px 12px;font-size:.82rem;
+  .top-inner{max-width:1040px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .wordmark{display:flex;align-items:center;gap:11px;min-width:0;}
+  .cup{
+    font-size:26px;line-height:1;filter:drop-shadow(0 2px 6px var(--gold-soft));
   }
-  button.ghost{background:transparent;color:var(--text);border:1px solid var(--border);}
-  button:disabled{opacity:.5;cursor:default;}
-  progress{width:100%;height:6px;accent-color:var(--accent2);}
-  nav.tabs{display:flex;gap:6px;margin:16px 0 12px;border-bottom:1px solid var(--border);}
+  .wordmark h1{
+    margin:0;font-size:1.16rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .wordmark .host{font-size:.7rem;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-weight:600;}
+  .top-spacer{flex:1;}
+  .sync-chip{
+    display:flex;align-items:center;gap:8px;font-size:.76rem;color:var(--muted);
+    background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px;
+  }
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--grass);flex-shrink:0;}
+  .sync-dot.busy{background:var(--gold);animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+  @media (prefers-reduced-motion: reduce){ .sync-dot.busy{animation:none} .live-dot{animation:none} }
+  button{font:inherit;cursor:pointer;border:none;}
+  .btn{
+    background:var(--grass);color:#04140c;font-weight:700;border-radius:10px;padding:8px 14px;font-size:.8rem;
+    transition:filter .15s, transform .05s;
+  }
+  :root[data-theme="dark"] .btn{color:#04140c;}
+  .btn:hover{filter:brightness(1.06);} .btn:active{transform:translateY(1px);}
+  .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);}
+  .btn:disabled{opacity:.5;cursor:default;}
+
+  .progress-track{height:3px;background:transparent;overflow:hidden;margin:0 -16px;}
+  .progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--grass),var(--gold));transition:width .3s;}
+
+  /* KPI strip */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0 8px;}
+  .kpi{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;
+    box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  .kpi::after{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--grass);opacity:.85;}
+  .kpi.gold::after{background:var(--gold);}
+  .kpi .k-val{font-size:1.7rem;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.1;}
+  .kpi .k-lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-top:2px;}
+  @media (max-width:640px){ .kpis{grid-template-columns:repeat(2,1fr);} .kpi .k-val{font-size:1.4rem;} }
+
+  /* Tabs */
+  nav.tabs{display:flex;gap:4px;margin:20px 0 16px;border-bottom:1px solid var(--line);overflow-x:auto;}
   nav.tabs button{
-    background:none;color:var(--muted);border:none;border-bottom:2px solid transparent;
-    border-radius:0;padding:9px 6px;font-weight:600;font-size:.9rem;
+    background:none;color:var(--muted);border-bottom:2px solid transparent;
+    padding:11px 14px;font-weight:700;font-size:.9rem;white-space:nowrap;letter-spacing:.01em;
   }
-  nav.tabs button.active{color:var(--text);border-bottom-color:var(--accent2);}
-  .controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
-  .controls input[type=text], .controls select{
-    background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:8px;
-    padding:8px 10px;font-size:.85rem;
+  nav.tabs button:hover{color:var(--text);}
+  nav.tabs button.active{color:var(--text);border-bottom-color:var(--grass);}
+
+  /* Controls */
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  .controls input, .controls select{
+    background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;
+    padding:9px 12px;font-size:.85rem;
   }
-  .day-group{margin-bottom:22px;}
+  .controls input{flex:1;min-width:150px;}
+  .controls input:focus, .controls select:focus, nav.tabs button:focus-visible, .btn:focus-visible, .match:focus-visible{
+    outline:2px solid var(--grass);outline-offset:2px;
+  }
+
+  /* Day groups & matches */
+  .day-group{margin-bottom:26px;}
   .day-title{
-    font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
-    margin:0 0 8px 2px;font-weight:700;
+    display:flex;align-items:center;gap:10px;
+    font-size:.74rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);
+    margin:0 0 10px 2px;font-weight:700;
   }
+  .day-title::after{content:"";flex:1;height:1px;background:var(--line);}
   .match{
-    background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:8px;
-    cursor:pointer;transition:border-color .15s;
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:13px 16px;margin-bottom:10px;cursor:pointer;transition:border-color .15s, transform .05s;
+    box-shadow:var(--shadow);
   }
-  .match:hover{border-color:var(--accent2);}
-  .match-top{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.72rem;color:var(--muted);margin-bottom:8px;}
-  .badge-status{padding:2px 8px;border-radius:20px;font-weight:700;font-size:.68rem;letter-spacing:.03em;}
-  .badge-status.live{background:var(--live);color:#fff;}
-  .badge-status.ft{background:var(--card2);color:var(--muted);}
-  .badge-status.ns{background:var(--accent2);color:#fff;}
-  .teams{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-  .team{display:flex;align-items:center;gap:8px;flex:1;min-width:0;}
+  .match:hover{border-color:color-mix(in srgb,var(--grass) 55%, var(--line));}
+  .match.live{border-color:var(--live);background:linear-gradient(0deg,var(--live-soft),transparent 60%),var(--panel);}
+  .match-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;}
+  .round-tag{font-size:.71rem;color:var(--muted);font-weight:600;letter-spacing:.02em;}
+  .pill{padding:3px 10px;border-radius:999px;font-weight:700;font-size:.68rem;letter-spacing:.04em;white-space:nowrap;}
+  .pill.ft{background:var(--panel2);color:var(--muted);border:1px solid var(--line);}
+  .pill.ns{background:var(--grass-soft);color:var(--grass);}
+  .pill.live{background:var(--live);color:#fff;display:flex;align-items:center;gap:6px;}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:#fff;animation:pulse 1s infinite;}
+  .teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;}
+  .team{display:flex;align-items:center;gap:10px;min-width:0;}
   .team.away{flex-direction:row-reverse;text-align:right;}
-  .team img{width:26px;height:26px;object-fit:contain;flex-shrink:0;}
-  .team span{font-weight:600;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .score{font-weight:800;font-size:1.15rem;min-width:64px;text-align:center;flex-shrink:0;}
-  .venue-line{margin-top:8px;font-size:.72rem;color:var(--muted);}
-  .timeline{
-    margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);font-size:.82rem;display:none;
+  .flag{font-size:1.5rem;line-height:1;flex-shrink:0;width:30px;text-align:center;}
+  .team .tname{font-weight:700;font-size:.98rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .score{
+    font-weight:800;font-size:1.5rem;letter-spacing:.02em;font-variant-numeric:tabular-nums;
+    min-width:72px;text-align:center;
   }
+  .score .vs{font-size:.9rem;font-weight:700;color:var(--muted);}
+  .score .pens{display:block;font-size:.64rem;font-weight:600;color:var(--muted);letter-spacing:0;}
+  .venue{margin-top:9px;font-size:.72rem;color:var(--muted);display:flex;gap:6px;align-items:center;}
+  .expand-hint{margin-left:auto;opacity:.6;font-size:.68rem;}
+
+  .timeline{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);display:none;}
   .timeline.open{display:block;}
-  .tl-row{display:flex;gap:8px;align-items:center;padding:3px 0;}
-  .tl-min{color:var(--muted);width:34px;flex-shrink:0;font-variant-numeric:tabular-nums;}
-  .tl-icon{width:16px;text-align:center;}
-  .tl-loading{color:var(--muted);font-style:italic;}
+  .tl-row{display:flex;gap:10px;align-items:baseline;padding:4px 0;font-size:.85rem;}
+  .tl-min{color:var(--muted);width:38px;flex-shrink:0;font-variant-numeric:tabular-nums;text-align:right;font-weight:600;}
+  .tl-ico{width:18px;text-align:center;flex-shrink:0;}
+  .tl-txt .who{font-weight:600;}
+  .tl-txt .meta{color:var(--muted);font-size:.9em;}
+  .tl-empty{color:var(--muted);font-style:italic;font-size:.82rem;padding:4px 0;}
+
+  /* Groups */
+  .groups-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+  @media (max-width:720px){ .groups-grid{grid-template-columns:1fr;} }
+  .group-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:15px 15px 8px;box-shadow:var(--shadow);}
+  .group-card h3{margin:0 0 10px;font-size:.92rem;letter-spacing:.03em;text-transform:uppercase;}
+  .tbl-scroll{overflow-x:auto;}
   table.standings{width:100%;border-collapse:collapse;font-size:.82rem;}
-  table.standings th, table.standings td{padding:6px 6px;text-align:center;border-bottom:1px solid var(--border);}
-  table.standings th:first-child, table.standings td:first-child{text-align:left;}
-  table.standings td.team-cell{display:flex;align-items:center;gap:6px;text-align:left;}
-  table.standings td.team-cell img{width:18px;height:18px;object-fit:contain;}
-  .group-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;}
-  .group-card h3{margin:0 0 10px;font-size:.95rem;}
-  .qual-line{border-top:2px solid var(--accent);}
-  .scorers-list{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-  .scorer-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);}
-  .scorer-row:last-child{border-bottom:none;}
-  .scorer-rank{width:22px;color:var(--muted);font-weight:700;font-size:.82rem;}
-  .scorer-name{flex:1;font-weight:600;font-size:.88rem;}
-  .scorer-team{color:var(--muted);font-size:.76rem;}
-  .scorer-goals{font-weight:800;color:var(--accent);}
-  .empty{color:var(--muted);text-align:center;padding:30px 10px;font-size:.88rem;}
-  footer{margin-top:34px;color:var(--muted);font-size:.72rem;text-align:center;line-height:1.6;}
-  a{color:var(--accent2);}
-  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+  table.standings th{font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;padding:5px 5px;text-align:center;}
+  table.standings td{padding:7px 5px;text-align:center;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;}
+  table.standings th.left,table.standings td.left{text-align:left;}
+  .pos{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;font-size:.72rem;font-weight:700;background:var(--panel2);color:var(--muted);}
+  tr.qual .pos{background:var(--grass-soft);color:var(--grass);}
+  .tteam{display:flex;align-items:center;gap:8px;}
+  .tteam .flag{font-size:1.15rem;width:20px;}
+  .tteam .tn{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pts{font-weight:800;}
+  .form{display:flex;gap:3px;justify-content:center;}
+  .fdot{width:15px;height:15px;border-radius:5px;font-size:.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;color:#fff;}
+  .fdot.W{background:var(--grass);} .fdot.D{background:var(--muted);} .fdot.L{background:var(--live);}
+  .qual-note{font-size:.7rem;color:var(--muted);margin:8px 2px 2px;display:flex;align-items:center;gap:7px;}
+  .qual-swatch{width:10px;height:10px;border-radius:3px;background:var(--grass);display:inline-block;}
+
+  /* Leaderboard */
+  .board{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
+  .lb-row{display:flex;align-items:center;gap:12px;padding:11px 15px;border-top:1px solid var(--line);position:relative;}
+  .lb-row:first-child{border-top:none;}
+  .lb-bar{position:absolute;left:0;top:0;bottom:0;background:var(--grass-soft);z-index:0;}
+  .lb-row.assist .lb-bar{background:var(--gold-soft);}
+  .lb-rank{width:26px;flex-shrink:0;text-align:center;font-weight:800;font-size:.9rem;color:var(--muted);z-index:1;font-variant-numeric:tabular-nums;}
+  .lb-row.top1 .lb-rank{color:var(--gold);} .lb-row.top2 .lb-rank{color:var(--silver);} .lb-row.top3 .lb-rank{color:var(--bronze);}
+  .lb-flag{font-size:1.3rem;width:26px;text-align:center;flex-shrink:0;z-index:1;}
+  .lb-main{flex:1;min-width:0;z-index:1;}
+  .lb-name{font-weight:700;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .lb-team{font-size:.74rem;color:var(--muted);}
+  .lb-count{font-weight:800;font-size:1.15rem;z-index:1;font-variant-numeric:tabular-nums;}
+  .lb-row .lb-count small{font-size:.6rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+
+  .section-note{font-size:.75rem;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 13px;margin-bottom:14px;display:flex;gap:9px;align-items:flex-start;}
+  .empty{color:var(--muted);text-align:center;padding:40px 16px;font-size:.9rem;}
+
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:.72rem;line-height:1.7;}
+  footer a{color:var(--grass);}
+  ::-webkit-scrollbar{height:8px;width:8px;} ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>🏆 Mundial 2026 — Seguimiento en vivo</h1>
-    <div class="sub">Canadá · Estados Unidos · México — 11 jun al 19 jul 2026</div>
-    <div class="statusbar">
-      <span class="dot" id="statusDot"></span>
-      <span id="statusText">Iniciando...</span>
-      <span style="flex:1"></span>
-      <button class="ghost" id="btnRefresh">Actualizar ahora</button>
-      <label style="display:flex;align-items:center;gap:5px;color:var(--muted);font-size:.8rem;">
-        <input type="checkbox" id="autoToggle" checked> Auto
-      </label>
+<header class="top">
+  <div class="top-inner">
+    <div class="wordmark">
+      <span class="cup">🏆</span>
+      <div>
+        <h1>Mundial 2026</h1>
+        <div class="host">Canadá · EE. UU. · México</div>
+      </div>
     </div>
-    <progress id="syncProgress" value="0" max="1" style="margin-top:8px;"></progress>
-  </header>
+    <div class="top-spacer"></div>
+    <div class="sync-chip"><span class="sync-dot" id="syncDot"></span><span id="syncText">Cargando…</span></div>
+    <button class="btn ghost" id="btnRefresh" title="Actualizar ahora">↻ Actualizar</button>
+  </div>
+  <div class="progress-track"><div class="progress-bar" id="progBar"></div></div>
+</header>
 
-  <nav class="tabs">
+<div class="wrap">
+  <div class="kpis">
+    <div class="kpi"><div class="k-val" id="kpiPlayed">—</div><div class="k-lbl">Partidos jugados</div></div>
+    <div class="kpi gold"><div class="k-val" id="kpiGoals">—</div><div class="k-lbl">Goles marcados</div></div>
+    <div class="kpi"><div class="k-val" id="kpiAvg">—</div><div class="k-lbl">Goles por partido</div></div>
+    <div class="kpi"><div class="k-val" id="kpiTeams">—</div><div class="k-lbl">Selecciones</div></div>
+  </div>
+
+  <nav class="tabs" id="tabs">
     <button data-tab="partidos" class="active">Partidos</button>
-    <button data-tab="tabla">Tabla de posiciones</button>
+    <button data-tab="grupos">Grupos</button>
     <button data-tab="goleadores">Goleadores</button>
+    <button data-tab="asistentes">Asistentes</button>
   </nav>
 
   <section id="tab-partidos">
     <div class="controls">
-      <input type="text" id="searchTeam" placeholder="Buscar selección...">
-      <select id="filterStatus">
+      <input type="text" id="q" placeholder="Buscar selección…" aria-label="Buscar selección">
+      <select id="fEstado" aria-label="Filtrar por estado">
         <option value="all">Todos los partidos</option>
-        <option value="live">En vivo</option>
+        <option value="live">En directo</option>
         <option value="played">Jugados</option>
         <option value="upcoming">Por jugar</option>
       </select>
-      <select id="filterGroup">
-        <option value="all">Todas las fases</option>
-      </select>
+      <select id="fFase" aria-label="Filtrar por fase"><option value="all">Todas las fases</option></select>
     </div>
-    <div id="matchesContainer"><div class="empty">Cargando calendario del torneo...</div></div>
+    <div id="matches"><div class="empty">Cargando calendario…</div></div>
   </section>
 
-  <section id="tab-tabla" style="display:none;">
-    <div id="standingsContainer"><div class="empty">Cargando...</div></div>
+  <section id="tab-grupos" hidden>
+    <div id="groups"><div class="empty">Cargando grupos…</div></div>
   </section>
 
-  <section id="tab-goleadores" style="display:none;">
-    <div class="controls" style="margin-bottom:10px;">
-      <span class="sub" id="scorersProgress"></span>
-    </div>
-    <div id="scorersContainer"><div class="empty">Cargando...</div></div>
+  <section id="tab-goleadores" hidden>
+    <div class="section-note"><span>⚽</span><span>Autores de gol con su minuto y asistente, extraídos del detalle de cada partido. Con la clave gratuita de la API el detalle puede venir recortado, así que la lista es orientativa.</span></div>
+    <div id="scorers"><div class="empty">Cargando…</div></div>
+  </section>
+
+  <section id="tab-asistentes" hidden>
+    <div class="section-note"><span>🅰️</span><span>Jugadores que más asistencias de gol han dado, según el detalle disponible de cada partido.</span></div>
+    <div id="assists"><div class="empty">Cargando…</div></div>
   </section>
 
   <footer>
-    Datos: <a href="https://www.thesportsdb.com" target="_blank">TheSportsDB</a> (API pública). Se auto-actualiza cada
-    <span id="refreshSecs">90</span> segundos. La clave gratuita usada aquí puede tener cobertura incompleta o
-    retrasos frente a la fuente oficial de FIFA; los resultados y goleadores se muestran "mejor esfuerzo" y deben
-    contrastarse en caso de duda. Última sincronización completa: <span id="lastFullSync">—</span>.
+    <p><strong>Datos:</strong> <a href="https://www.thesportsdb.com" target="_blank" rel="noopener">TheSportsDB</a> (API pública). La app trae una instantánea incorporada y, si hay conexión, se actualiza sola cada 90 s. Última actualización en directo: <span id="lastSync">—</span>.</p>
+    <p><strong>Cobertura:</strong> con la clave gratuita puede faltar algún partido, gol o asistencia, o llegar con retraso frente a FIFA. El dato de <em>mejor jugador del partido</em> no lo ofrece esta fuente, por eso no aparece. Para cobertura completa, sustituye la clave <code>API_KEY</code> por una de pago en el código.</p>
   </footer>
 </div>
 
 <script>
+/* ============ SEED (instantánea de datos reales incorporada) ============ */
+var SEED = /*seed*/{"events": [{"idEvent": "2391728", "dateEvent": "2026-06-11", "strTime": "19:00:00", "strHomeTeam": "Mexico", "strAwayTeam": "South Africa", "idHomeTeam": "134497", "idAwayTeam": "136482", "intHomeScore": "2", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "A", "intRound": "1", "strVenue": "Estadio Azteca", "strCity": "Mexico City, MX", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/3rmosi1748525208.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/xjz9j91553368824.png"}, {"idEvent": "2461103", "dateEvent": "2026-06-12", "strTime": "02:00:00", "strHomeTeam": "South Korea", "strAwayTeam": "Czech Republic", "idHomeTeam": "134517", "idAwayTeam": "133904", "intHomeScore": "2", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "A", "intRound": "1", "strVenue": "Estadio Akron", "strCity": "Zapopan, JA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/a8nqfs1589564916.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/1o0cx31654205806.png"}, {"idEvent": "2461104", "dateEvent": "2026-06-12", "strTime": "19:00:00", "strHomeTeam": "Canada", "strAwayTeam": "Bosnia-Herzegovina", "idHomeTeam": "140073", "idAwayTeam": "134510", "intHomeScore": "1", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "B", "intRound": "1", "strVenue": "BMO Field", "strCity": "Toronto, ON", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/2t631f1595154867.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/wtqqst1455463120.png"}, {"idEvent": "2391729", "dateEvent": "2026-06-13", "strTime": "01:00:00", "strHomeTeam": "USA", "strAwayTeam": "Paraguay", "idHomeTeam": "134514", "idAwayTeam": "136471", "intHomeScore": "4", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "D", "intRound": "1", "strVenue": "SoFi Stadium", "strCity": "Inglewood, CA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/21f0oi1597948195.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/khgav41553419195.png"}, {"idEvent": "2391732", "dateEvent": "2026-06-13", "strTime": "19:00:00", "strHomeTeam": "Qatar", "strAwayTeam": "Switzerland", "idHomeTeam": "136472", "idAwayTeam": "134506", "intHomeScore": "1", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "B", "intRound": "1", "strVenue": "Levi's Stadium", "strCity": "Santa Clara, CA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/rs3ir31642708685.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/mb7yqe1717365808.png"}, {"idEvent": "2391730", "dateEvent": "2026-06-13", "strTime": "22:00:00", "strHomeTeam": "Brazil", "strAwayTeam": "Morocco", "idHomeTeam": "134496", "idAwayTeam": "136139", "intHomeScore": "1", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "C", "intRound": "1", "strVenue": "MetLife Stadium", "strCity": "East Rutherford, NJ", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/jl6dip1726167280.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/hbmwkj1731791275.png"}, {"idEvent": "2391731", "dateEvent": "2026-06-14", "strTime": "01:00:00", "strHomeTeam": "Haiti", "strAwayTeam": "Scotland", "idHomeTeam": "140175", "idAwayTeam": "136450", "intHomeScore": "0", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "C", "intRound": "1", "strVenue": "Gillette Stadium", "strCity": "Foxborough, MA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/gml8wx1598135302.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/3691i11552945146.png"}, {"idEvent": "2391733", "dateEvent": "2026-06-14", "strTime": "17:00:00", "strHomeTeam": "Germany", "strAwayTeam": "Curaçao", "idHomeTeam": "133907", "idAwayTeam": "140271", "intHomeScore": "7", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "E", "intRound": "1", "strVenue": "NRG Stadium", "strCity": "Houston, TX", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/1xysi51726167152.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/itygvb1600955363.png"}, {"idEvent": "2391734", "dateEvent": "2026-06-14", "strTime": "23:00:00", "strHomeTeam": "Ivory Coast", "strAwayTeam": "Ecuador", "idHomeTeam": "134502", "idAwayTeam": "134507", "intHomeScore": "1", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "E", "intRound": "1", "strVenue": "Lincoln Financial Field", "strCity": "Philadelphia, PA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/rwxuuu1455465643.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/47wv2y1591989301.png"}, {"idEvent": "2391739", "dateEvent": "2026-06-15", "strTime": "16:00:00", "strHomeTeam": "Spain", "strAwayTeam": "Cape Verde", "idHomeTeam": "133909", "idAwayTeam": "136477", "intHomeScore": "0", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "H", "intRound": "1", "strVenue": "Mercedes-Benz Stadium", "strCity": "Atlanta, GA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/ncgqyr1726166942.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/5jn0o71593280376.png"}, {"idEvent": "2391736", "dateEvent": "2026-06-15", "strTime": "19:00:00", "strHomeTeam": "Belgium", "strAwayTeam": "Egypt", "idHomeTeam": "134515", "idAwayTeam": "136138", "intHomeScore": "1", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "G", "intRound": "1", "strVenue": "Lumen Field", "strCity": "Seattle, WA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/8xlvxv1592062265.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/uheyzo1742102234.png"}, {"idEvent": "2391738", "dateEvent": "2026-06-15", "strTime": "22:00:00", "strHomeTeam": "Saudi Arabia", "strAwayTeam": "Uruguay", "idHomeTeam": "136137", "idAwayTeam": "134504", "intHomeScore": "1", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "H", "intRound": "1", "strVenue": "Hard Rock Stadium", "strCity": "Miami Gardens, FL", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/24xwpq1594125742.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/6vjbr11726167756.png"}, {"idEvent": "2391737", "dateEvent": "2026-06-16", "strTime": "01:00:00", "strHomeTeam": "Iran", "strAwayTeam": "New Zealand", "idHomeTeam": "134511", "idAwayTeam": "137449", "intHomeScore": "2", "intAwayScore": "2", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "G", "intRound": "1", "strVenue": "SoFi Stadium", "strCity": "Inglewood, CA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/uttpvw1455465617.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/91xpk81742982935.png"}, {"idEvent": "2391742", "dateEvent": "2026-06-16", "strTime": "19:00:00", "strHomeTeam": "France", "strAwayTeam": "Senegal", "idHomeTeam": "133913", "idAwayTeam": "136143", "intHomeScore": "3", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "I", "intRound": "1", "strVenue": "MetLife Stadium", "strCity": "East Rutherford, NJ", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/p3n0z51726166851.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/slayb01780546342.png"}, {"idEvent": "2461107", "dateEvent": "2026-06-16", "strTime": "22:00:00", "strHomeTeam": "Iraq", "strAwayTeam": "Norway", "idHomeTeam": "140148", "idAwayTeam": "136516", "intHomeScore": "1", "intAwayScore": "4", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "I", "intRound": "1", "strVenue": "Gillette Stadium", "strCity": "Foxborough, MA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/aqidfn1742100110.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/gyfn811591973155.png"}, {"idEvent": "2391740", "dateEvent": "2026-06-17", "strTime": "01:00:00", "strHomeTeam": "Argentina", "strAwayTeam": "Algeria", "idHomeTeam": "134509", "idAwayTeam": "134516", "intHomeScore": "3", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "J", "intRound": "1", "strVenue": "GEHA Field at Arrowhead Stadium", "strCity": "Kansas City, MO", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/3zplhu1726167477.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/rrwpry1455460218.png"}, {"idEvent": "2391741", "dateEvent": "2026-06-17", "strTime": "04:00:00", "strHomeTeam": "Austria", "strAwayTeam": "Jordan", "idHomeTeam": "135986", "idAwayTeam": "140145", "intHomeScore": "3", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "J", "intRound": "1", "strVenue": "Levi's Stadium", "strCity": "Santa Clara, CA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/874p631628721400.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/59fo2s1742100034.png"}, {"idEvent": "2391743", "dateEvent": "2026-06-17", "strTime": "20:00:00", "strHomeTeam": "England", "strAwayTeam": "Croatia", "idHomeTeam": "133914", "idAwayTeam": "133912", "intHomeScore": "4", "intAwayScore": "2", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "L", "intRound": "1", "strVenue": "AT&T Stadium", "strCity": "Arlington, TX", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/vf5ttc1726166739.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/vvtsyu1455465317.png"}, {"idEvent": "2391745", "dateEvent": "2026-06-18", "strTime": "02:00:00", "strHomeTeam": "Uzbekistan", "strAwayTeam": "Colombia", "idHomeTeam": "140151", "idAwayTeam": "134501", "intHomeScore": "1", "intAwayScore": "3", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "K", "intRound": "1", "strVenue": "Estadio Azteca", "strCity": "Mexico City, MX", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/u5bgze1597943605.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/4ymyku1691180081.png"}, {"idEvent": "2461109", "dateEvent": "2026-06-18", "strTime": "16:00:00", "strHomeTeam": "Czech Republic", "strAwayTeam": "South Africa", "idHomeTeam": "133904", "idAwayTeam": "136482", "intHomeScore": "1", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "A", "intRound": "2", "strVenue": "Mercedes-Benz Stadium", "strCity": "Atlanta, GA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/1o0cx31654205806.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/xjz9j91553368824.png"}, {"idEvent": "2391746", "dateEvent": "2026-06-18", "strTime": "22:00:00", "strHomeTeam": "Canada", "strAwayTeam": "Qatar", "idHomeTeam": "140073", "idAwayTeam": "136472", "intHomeScore": "6", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "B", "intRound": "2", "strVenue": "BC Place", "strCity": "Vancouver, BC", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/2t631f1595154867.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/rs3ir31642708685.png"}, {"idEvent": "2391747", "dateEvent": "2026-06-19", "strTime": "01:00:00", "strHomeTeam": "Mexico", "strAwayTeam": "South Korea", "idHomeTeam": "134497", "idAwayTeam": "134517", "intHomeScore": "1", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "A", "intRound": "2", "strVenue": "Estadio Akron", "strCity": "Zapopan, JA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/3rmosi1748525208.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/a8nqfs1589564916.png"}, {"idEvent": "2391750", "dateEvent": "2026-06-19", "strTime": "19:00:00", "strHomeTeam": "USA", "strAwayTeam": "Australia", "idHomeTeam": "134514", "idAwayTeam": "134500", "intHomeScore": "2", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "D", "intRound": "2", "strVenue": "Lumen Field", "strCity": "Seattle, WA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/21f0oi1597948195.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/eylq8x1781926138.png"}, {"idEvent": "2391749", "dateEvent": "2026-06-19", "strTime": "22:00:00", "strHomeTeam": "Scotland", "strAwayTeam": "Morocco", "idHomeTeam": "136450", "idAwayTeam": "136139", "intHomeScore": "0", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "C", "intRound": "2", "strVenue": "Gillette Stadium", "strCity": "Foxborough, MA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/3691i11552945146.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/hbmwkj1731791275.png"}, {"idEvent": "2391748", "dateEvent": "2026-06-20", "strTime": "00:30:00", "strHomeTeam": "Brazil", "strAwayTeam": "Haiti", "idHomeTeam": "134496", "idAwayTeam": "140175", "intHomeScore": "3", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "C", "intRound": "2", "strVenue": "Lincoln Financial Field", "strCity": "Philadelphia, PA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/jl6dip1726167280.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/gml8wx1598135302.png"}, {"idEvent": "2461111", "dateEvent": "2026-06-20", "strTime": "03:00:00", "strHomeTeam": "Turkey", "strAwayTeam": "Paraguay", "idHomeTeam": "135985", "idAwayTeam": "136471", "intHomeScore": "0", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "D", "intRound": "2", "strVenue": "Levi's Stadium", "strCity": "Santa Clara, CA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/70c4oo1591982459.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/khgav41553419195.png"}, {"idEvent": "2391752", "dateEvent": "2026-06-20", "strTime": "20:00:00", "strHomeTeam": "Germany", "strAwayTeam": "Ivory Coast", "idHomeTeam": "133907", "idAwayTeam": "134502", "intHomeScore": "2", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "E", "intRound": "2", "strVenue": "BMO Field", "strCity": "Toronto, ON", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/1xysi51726167152.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/rwxuuu1455465643.png"}, {"idEvent": "2391751", "dateEvent": "2026-06-21", "strTime": "00:00:00", "strHomeTeam": "Ecuador", "strAwayTeam": "Curaçao", "idHomeTeam": "134507", "idAwayTeam": "140271", "intHomeScore": "0", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "E", "intRound": "2", "strVenue": "GEHA Field at Arrowhead Stadium", "strCity": "Kansas City, MO", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/47wv2y1591989301.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/itygvb1600955363.png"}, {"idEvent": "2391753", "dateEvent": "2026-06-21", "strTime": "04:00:00", "strHomeTeam": "Tunisia", "strAwayTeam": "Japan", "idHomeTeam": "136142", "idAwayTeam": "134503", "intHomeScore": "0", "intAwayScore": "4", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "F", "intRound": "2", "strVenue": "Estadio BBVA", "strCity": "Guadalupe, NL", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/7r89rg1526727277.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/ffsyxz1591989843.png"}, {"idEvent": "2391754", "dateEvent": "2026-06-21", "strTime": "19:00:00", "strHomeTeam": "Belgium", "strAwayTeam": "Iran", "idHomeTeam": "134515", "idAwayTeam": "134511", "intHomeScore": "0", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "G", "intRound": "2", "strVenue": "SoFi Stadium", "strCity": "Inglewood, CA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/8xlvxv1592062265.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/uttpvw1455465617.png"}, {"idEvent": "2391755", "dateEvent": "2026-06-22", "strTime": "01:00:00", "strHomeTeam": "New Zealand", "strAwayTeam": "Egypt", "idHomeTeam": "137449", "idAwayTeam": "136138", "intHomeScore": "1", "intAwayScore": "3", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "G", "intRound": "2", "strVenue": "BC Place", "strCity": "Vancouver, BC", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/91xpk81742982935.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/uheyzo1742102234.png"}, {"idEvent": "2391758", "dateEvent": "2026-06-22", "strTime": "17:00:00", "strHomeTeam": "Argentina", "strAwayTeam": "Austria", "idHomeTeam": "134509", "idAwayTeam": "135986", "intHomeScore": "2", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "J", "intRound": "2", "strVenue": "AT&T Stadium", "strCity": "Arlington, TX", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/3zplhu1726167477.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/874p631628721400.png"}, {"idEvent": "2461113", "dateEvent": "2026-06-22", "strTime": "21:00:00", "strHomeTeam": "France", "strAwayTeam": "Iraq", "idHomeTeam": "133913", "idAwayTeam": "140148", "intHomeScore": "3", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "I", "intRound": "2", "strVenue": "Lincoln Financial Field", "strCity": "Philadelphia, PA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/p3n0z51726166851.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/aqidfn1742100110.png"}, {"idEvent": "2391760", "dateEvent": "2026-06-23", "strTime": "00:00:00", "strHomeTeam": "Norway", "strAwayTeam": "Senegal", "idHomeTeam": "136516", "idAwayTeam": "136143", "intHomeScore": "3", "intAwayScore": "2", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "I", "intRound": "2", "strVenue": "MetLife Stadium", "strCity": "East Rutherford, NJ", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/gyfn811591973155.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/slayb01780546342.png"}, {"idEvent": "2391759", "dateEvent": "2026-06-23", "strTime": "03:00:00", "strHomeTeam": "Jordan", "strAwayTeam": "Algeria", "idHomeTeam": "140145", "idAwayTeam": "134516", "intHomeScore": "1", "intAwayScore": "2", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "J", "intRound": "2", "strVenue": "Levi's Stadium", "strCity": "Santa Clara, CA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/59fo2s1742100034.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/rrwpry1455460218.png"}, {"idEvent": "2391761", "dateEvent": "2026-06-23", "strTime": "20:00:00", "strHomeTeam": "England", "strAwayTeam": "Ghana", "idHomeTeam": "133914", "idAwayTeam": "134513", "intHomeScore": "0", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "L", "intRound": "2", "strVenue": "Gillette Stadium", "strCity": "Foxborough, MA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/vf5ttc1726166739.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/j589xw1751526124.png"}, {"idEvent": "2391767", "dateEvent": "2026-06-24", "strTime": "19:00:00", "strHomeTeam": "Switzerland", "strAwayTeam": "Canada", "idHomeTeam": "134506", "idAwayTeam": "140073", "intHomeScore": "2", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "B", "intRound": "3", "strVenue": "BC Place", "strCity": "Vancouver, BC", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/mb7yqe1717365808.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/2t631f1595154867.png"}, {"idEvent": "2391764", "dateEvent": "2026-06-24", "strTime": "22:00:00", "strHomeTeam": "Morocco", "strAwayTeam": "Haiti", "idHomeTeam": "136139", "idAwayTeam": "140175", "intHomeScore": "4", "intAwayScore": "2", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "C", "intRound": "3", "strVenue": "Mercedes-Benz Stadium", "strCity": "Atlanta, GA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/hbmwkj1731791275.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/gml8wx1598135302.png"}, {"idEvent": "2391765", "dateEvent": "2026-06-24", "strTime": "22:00:00", "strHomeTeam": "Scotland", "strAwayTeam": "Brazil", "idHomeTeam": "136450", "idAwayTeam": "134496", "intHomeScore": "0", "intAwayScore": "3", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "C", "intRound": "3", "strVenue": "Hard Rock Stadium", "strCity": "Miami Gardens, FL", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/3691i11552945146.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/jl6dip1726167280.png"}, {"idEvent": "2391766", "dateEvent": "2026-06-25", "strTime": "01:00:00", "strHomeTeam": "South Africa", "strAwayTeam": "South Korea", "idHomeTeam": "136482", "idAwayTeam": "134517", "intHomeScore": "1", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "A", "intRound": "3", "strVenue": "Estadio BBVA", "strCity": "Guadalupe, NL", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/xjz9j91553368824.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/a8nqfs1589564916.png"}, {"idEvent": "2391768", "dateEvent": "2026-06-25", "strTime": "20:00:00", "strHomeTeam": "Curaçao", "strAwayTeam": "Ivory Coast", "idHomeTeam": "140271", "idAwayTeam": "134502", "intHomeScore": "0", "intAwayScore": "2", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "E", "intRound": "3", "strVenue": "Lincoln Financial Field", "strCity": "Philadelphia, PA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/itygvb1600955363.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/rwxuuu1455465643.png"}, {"idEvent": "2391769", "dateEvent": "2026-06-25", "strTime": "20:00:00", "strHomeTeam": "Ecuador", "strAwayTeam": "Germany", "idHomeTeam": "134507", "idAwayTeam": "133907", "intHomeScore": "2", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "E", "intRound": "3", "strVenue": "MetLife Stadium", "strCity": "East Rutherford, NJ", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/47wv2y1591989301.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/1xysi51726167152.png"}, {"idEvent": "2391770", "dateEvent": "2026-06-26", "strTime": "02:00:00", "strHomeTeam": "Paraguay", "strAwayTeam": "Australia", "idHomeTeam": "136471", "idAwayTeam": "134500", "intHomeScore": "0", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "D", "intRound": "3", "strVenue": "Levi's Stadium", "strCity": "Santa Clara, CA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/khgav41553419195.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/eylq8x1781926138.png"}, {"idEvent": "2461118", "dateEvent": "2026-06-26", "strTime": "02:00:00", "strHomeTeam": "Turkey", "strAwayTeam": "USA", "idHomeTeam": "135985", "idAwayTeam": "134514", "intHomeScore": "3", "intAwayScore": "2", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "D", "intRound": "3", "strVenue": "SoFi Stadium", "strCity": "Inglewood, CA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/70c4oo1591982459.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/21f0oi1597948195.png"}, {"idEvent": "2391775", "dateEvent": "2026-06-26", "strTime": "19:00:00", "strHomeTeam": "Norway", "strAwayTeam": "France", "idHomeTeam": "136516", "idAwayTeam": "133913", "intHomeScore": "1", "intAwayScore": "4", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "I", "intRound": "3", "strVenue": "Gillette Stadium", "strCity": "Foxborough, MA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/gyfn811591973155.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/p3n0z51726166851.png"}, {"idEvent": "2391772", "dateEvent": "2026-06-27", "strTime": "00:00:00", "strHomeTeam": "Cape Verde", "strAwayTeam": "Saudi Arabia", "idHomeTeam": "136477", "idAwayTeam": "136137", "intHomeScore": "0", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "H", "intRound": "3", "strVenue": "NRG Stadium", "strCity": "Houston, TX", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/5jn0o71593280376.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/24xwpq1594125742.png"}, {"idEvent": "2391773", "dateEvent": "2026-06-27", "strTime": "03:00:00", "strHomeTeam": "Egypt", "strAwayTeam": "Iran", "idHomeTeam": "136138", "idAwayTeam": "134511", "intHomeScore": "1", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "G", "intRound": "3", "strVenue": "Lumen Field", "strCity": "Seattle, WA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/uheyzo1742102234.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/uttpvw1455465617.png"}, {"idEvent": "2391774", "dateEvent": "2026-06-27", "strTime": "03:00:00", "strHomeTeam": "New Zealand", "strAwayTeam": "Belgium", "idHomeTeam": "137449", "idAwayTeam": "134515", "intHomeScore": "1", "intAwayScore": "5", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "G", "intRound": "3", "strVenue": "BC Place", "strCity": "Vancouver, BC", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/91xpk81742982935.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/8xlvxv1592062265.png"}, {"idEvent": "2391777", "dateEvent": "2026-06-28", "strTime": "02:00:00", "strHomeTeam": "Algeria", "strAwayTeam": "Austria", "idHomeTeam": "134516", "idAwayTeam": "135986", "intHomeScore": "3", "intAwayScore": "3", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "J", "intRound": "3", "strVenue": "GEHA Field at Arrowhead Stadium", "strCity": "Kansas City, MO", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/rrwpry1455460218.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/874p631628721400.png"}, {"idEvent": "2391780", "dateEvent": "2026-06-28", "strTime": "02:00:00", "strHomeTeam": "Jordan", "strAwayTeam": "Argentina", "idHomeTeam": "140145", "idAwayTeam": "134509", "intHomeScore": "1", "intAwayScore": "3", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "J", "intRound": "3", "strVenue": "AT&T Stadium", "strCity": "Arlington, TX", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/59fo2s1742100034.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/3zplhu1726167477.png"}, {"idEvent": "2499618", "dateEvent": "2026-06-28", "strTime": "19:00:00", "strHomeTeam": "South Africa", "strAwayTeam": "Canada", "idHomeTeam": "136482", "idAwayTeam": "140073", "intHomeScore": "0", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "", "intRound": "32", "strVenue": "SoFi Stadium", "strCity": "Inglewood, CA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/xjz9j91553368824.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/2t631f1595154867.png"}, {"idEvent": "2499835", "dateEvent": "2026-06-29", "strTime": "17:00:00", "strHomeTeam": "Brazil", "strAwayTeam": "Japan", "idHomeTeam": "134496", "idAwayTeam": "134503", "intHomeScore": "2", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "", "intRound": "32", "strVenue": "NRG Stadium", "strCity": "Houston, TX", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/jl6dip1726167280.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/ffsyxz1591989843.png"}, {"idEvent": "2502846", "dateEvent": "2026-06-29", "strTime": "20:30:00", "strHomeTeam": "Germany", "strAwayTeam": "Paraguay", "idHomeTeam": "133907", "idAwayTeam": "136471", "intHomeScore": "1", "intAwayScore": "1", "intHomeScoreExtra": "3", "intAwayScoreExtra": "4", "strStatus": "AP", "strGroup": "", "intRound": "32", "strVenue": "Gillette Stadium", "strCity": "Foxborough, MA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/1xysi51726167152.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/khgav41553419195.png"}, {"idEvent": "2499836", "dateEvent": "2026-06-30", "strTime": "01:00:00", "strHomeTeam": "Netherlands", "strAwayTeam": "Morocco", "idHomeTeam": "133905", "idAwayTeam": "136139", "intHomeScore": "1", "intAwayScore": "1", "intHomeScoreExtra": "2", "intAwayScoreExtra": "3", "strStatus": "AP", "strGroup": "", "intRound": "32", "strVenue": "Estadio BBVA", "strCity": "Guadalupe, NL", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/1p0hr41593787110.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/hbmwkj1731791275.png"}, {"idEvent": "2502605", "dateEvent": "2026-06-30", "strTime": "17:00:00", "strHomeTeam": "Ivory Coast", "strAwayTeam": "Norway", "idHomeTeam": "134502", "idAwayTeam": "136516", "intHomeScore": "1", "intAwayScore": "2", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "", "intRound": "32", "strVenue": "AT&T Stadium", "strCity": "Arlington, TX", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/rwxuuu1455465643.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/gyfn811591973155.png"}, {"idEvent": "2502847", "dateEvent": "2026-06-30", "strTime": "21:00:00", "strHomeTeam": "France", "strAwayTeam": "Sweden", "idHomeTeam": "133913", "idAwayTeam": "133916", "intHomeScore": "3", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "", "intRound": "32", "strVenue": "MetLife Stadium", "strCity": "East Rutherford, NJ", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/p3n0z51726166851.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/h5adzg1591981772.png"}, {"idEvent": "2503390", "dateEvent": "2026-07-01", "strTime": "01:00:00", "strHomeTeam": "Mexico", "strAwayTeam": "Ecuador", "idHomeTeam": "134497", "idAwayTeam": "134507", "intHomeScore": "2", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "", "intRound": "32", "strVenue": "Estadio Banorte", "strCity": "Mexico City, MX", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/3rmosi1748525208.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/47wv2y1591989301.png"}, {"idEvent": "2503391", "dateEvent": "2026-07-01", "strTime": "16:00:00", "strHomeTeam": "England", "strAwayTeam": "DR Congo", "idHomeTeam": "133914", "idAwayTeam": "136475", "intHomeScore": "2", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "", "intRound": "32", "strVenue": "Mercedes-Benz Stadium", "strCity": "Atlanta, GA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/vf5ttc1726166739.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/s85jjw1728749022.png"}, {"idEvent": "2503392", "dateEvent": "2026-07-01", "strTime": "20:00:00", "strHomeTeam": "Belgium", "strAwayTeam": "Senegal", "idHomeTeam": "134515", "idAwayTeam": "136143", "intHomeScore": "3", "intAwayScore": "2", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "AET", "strGroup": "", "intRound": "32", "strVenue": "Lumen Field", "strCity": "Seattle, WA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/8xlvxv1592062265.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/slayb01780546342.png"}, {"idEvent": "2499837", "dateEvent": "2026-07-02", "strTime": "00:00:00", "strHomeTeam": "USA", "strAwayTeam": "Bosnia-Herzegovina", "idHomeTeam": "134514", "idAwayTeam": "134510", "intHomeScore": "2", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "", "intRound": "32", "strVenue": "Levi's Stadium", "strCity": "Santa Clara, CA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/21f0oi1597948195.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/wtqqst1455463120.png"}, {"idEvent": "2503636", "dateEvent": "2026-07-02", "strTime": "19:00:00", "strHomeTeam": "Spain", "strAwayTeam": "Austria", "idHomeTeam": "133909", "idAwayTeam": "135986", "intHomeScore": "3", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "", "intRound": "32", "strVenue": "SoFi Stadium", "strCity": "Inglewood, CA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/ncgqyr1726166942.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/874p631628721400.png"}, {"idEvent": "2503393", "dateEvent": "2026-07-02", "strTime": "23:00:00", "strHomeTeam": "Portugal", "strAwayTeam": "Croatia", "idHomeTeam": "133908", "idAwayTeam": "133912", "intHomeScore": "2", "intAwayScore": "1", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "", "intRound": "32", "strVenue": "BMO Field", "strCity": "Toronto, ON", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/swqvpy1455466083.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/vvtsyu1455465317.png"}, {"idEvent": "2503635", "dateEvent": "2026-07-03", "strTime": "03:00:00", "strHomeTeam": "Switzerland", "strAwayTeam": "Algeria", "idHomeTeam": "134506", "idAwayTeam": "134516", "intHomeScore": "2", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "", "intRound": "32", "strVenue": "BC Place", "strCity": "Vancouver, BC", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/mb7yqe1717365808.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/rrwpry1455460218.png"}, {"idEvent": "2502848", "dateEvent": "2026-07-03", "strTime": "18:00:00", "strHomeTeam": "Australia", "strAwayTeam": "Egypt", "idHomeTeam": "134500", "idAwayTeam": "136138", "intHomeScore": "1", "intAwayScore": "1", "intHomeScoreExtra": "2", "intAwayScoreExtra": "4", "strStatus": "AP", "strGroup": "", "intRound": "32", "strVenue": "AT&T Stadium", "strCity": "Arlington, TX", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/eylq8x1781926138.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/uheyzo1742102234.png"}, {"idEvent": "2502849", "dateEvent": "2026-07-03", "strTime": "22:00:00", "strHomeTeam": "Argentina", "strAwayTeam": "Cape Verde", "idHomeTeam": "134509", "idAwayTeam": "136477", "intHomeScore": "3", "intAwayScore": "2", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "AET", "strGroup": "", "intRound": "32", "strVenue": "Hard Rock Stadium", "strCity": "Miami Gardens, FL", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/3zplhu1726167477.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/5jn0o71593280376.png"}, {"idEvent": "2503394", "dateEvent": "2026-07-04", "strTime": "01:30:00", "strHomeTeam": "Colombia", "strAwayTeam": "Ghana", "idHomeTeam": "134501", "idAwayTeam": "134513", "intHomeScore": "1", "intAwayScore": "0", "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "FT", "strGroup": "", "intRound": "32", "strVenue": "GEHA Field at Arrowhead Stadium", "strCity": "Kansas City, MO", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/4ymyku1691180081.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/j589xw1751526124.png"}, {"idEvent": "2505183", "dateEvent": "2026-07-04", "strTime": "17:00:00", "strHomeTeam": "Canada", "strAwayTeam": "Morocco", "idHomeTeam": "140073", "idAwayTeam": "136139", "intHomeScore": null, "intAwayScore": null, "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "NS", "strGroup": "", "intRound": "16", "strVenue": "NRG Stadium", "strCity": "Houston, TX", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/2t631f1595154867.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/hbmwkj1731791275.png"}, {"idEvent": "2505624", "dateEvent": "2026-07-04", "strTime": "21:00:00", "strHomeTeam": "Paraguay", "strAwayTeam": "France", "idHomeTeam": "136471", "idAwayTeam": "133913", "intHomeScore": null, "intAwayScore": null, "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "NS", "strGroup": "", "intRound": "16", "strVenue": "Lincoln Financial Field", "strCity": "Philadelphia, PA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/khgav41553419195.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/p3n0z51726166851.png"}, {"idEvent": "2505462", "dateEvent": "2026-07-05", "strTime": "20:00:00", "strHomeTeam": "Brazil", "strAwayTeam": "Norway", "idHomeTeam": "134496", "idAwayTeam": "136516", "intHomeScore": null, "intAwayScore": null, "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "NS", "strGroup": "", "intRound": "16", "strVenue": "MetLife Stadium", "strCity": "East Rutherford, NJ", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/jl6dip1726167280.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/gyfn811591973155.png"}, {"idEvent": "2507706", "dateEvent": "2026-07-06", "strTime": "00:00:00", "strHomeTeam": "Mexico", "strAwayTeam": "England", "idHomeTeam": "134497", "idAwayTeam": "133914", "intHomeScore": null, "intAwayScore": null, "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "NS", "strGroup": "", "intRound": "16", "strVenue": "Estadio Banorte", "strCity": "Mexico City, MX", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/3rmosi1748525208.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/vf5ttc1726166739.png"}, {"idEvent": "2511721", "dateEvent": "2026-07-06", "strTime": "19:00:00", "strHomeTeam": "Portugal", "strAwayTeam": "Spain", "idHomeTeam": "133908", "idAwayTeam": "133909", "intHomeScore": null, "intAwayScore": null, "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "NS", "strGroup": "", "intRound": "16", "strVenue": "AT&T Stadium", "strCity": "Arlington, TX", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/swqvpy1455466083.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/ncgqyr1726166942.png"}, {"idEvent": "2507707", "dateEvent": "2026-07-07", "strTime": "00:00:00", "strHomeTeam": "USA", "strAwayTeam": "Belgium", "idHomeTeam": "134514", "idAwayTeam": "134515", "intHomeScore": null, "intAwayScore": null, "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "NS", "strGroup": "", "intRound": "16", "strVenue": "Lumen Field", "strCity": "Seattle, WA", "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/21f0oi1597948195.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/8xlvxv1592062265.png"}, {"idEvent": "2513670", "dateEvent": "2026-07-07", "strTime": "16:00:00", "strHomeTeam": "Argentina", "strAwayTeam": "Egypt", "idHomeTeam": "134509", "idAwayTeam": "136138", "intHomeScore": null, "intAwayScore": null, "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "NS", "strGroup": null, "intRound": "16", "strVenue": "Estadio Mâs Monumental", "strCity": null, "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/3zplhu1726167477.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/uheyzo1742102234.png"}, {"idEvent": "2513671", "dateEvent": "2026-07-07", "strTime": "20:00:00", "strHomeTeam": "Switzerland", "strAwayTeam": "Colombia", "idHomeTeam": "134506", "idAwayTeam": "134501", "intHomeScore": null, "intAwayScore": null, "intHomeScoreExtra": null, "intAwayScoreExtra": null, "strStatus": "NS", "strGroup": null, "intRound": "16", "strVenue": "Stade de Genève", "strCity": null, "strHomeTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/mb7yqe1717365808.png", "strAwayTeamBadge": "https://r2.thesportsdb.com/images/media/team/badge/4ymyku1691180081.png"}], "timelines": {"2391728": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Julián Quiñones", "strAssist": "Érik Lira", "intTime": "9", "strTeam": "Mexico", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Teboho Mokoena", "strAssist": "", "intTime": "17", "strTeam": "South Africa", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Brian Gutiérrez", "strAssist": "", "intTime": "23", "strTeam": "Mexico", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Red Card", "strPlayer": "Sphephelo Sithole", "strAssist": "", "intTime": "49", "strTeam": "South Africa", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Lyle Foster", "strAssist": "Thalente Mbatha", "intTime": "56", "strTeam": "South Africa", "strHome": "No"}], "2461103": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Ladislav Krejčí", "strAssist": "Vladimír Coufal", "intTime": "59", "strTeam": "Czech Republic", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Jae-sung Lee", "strAssist": "Hee-chan Hwang", "intTime": "62", "strTeam": "South Korea", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Pavel Šulc", "strAssist": "Adam Hložek", "intTime": "64", "strTeam": "Czech Republic", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Patrik Schick", "strAssist": "Tomáš Chorý", "intTime": "64", "strTeam": "Czech Republic", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 3", "strPlayer": "Lukáš Provod", "strAssist": "Michal Sadílek", "intTime": "64", "strTeam": "Czech Republic", "strHome": "No"}], "2461104": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Alistair Johnston", "strAssist": "", "intTime": "11", "strTeam": "Canada", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Jovo Lukić", "strAssist": "Sead Kolašinac", "intTime": "21", "strTeam": "Bosnia-Herzegovina", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Ermedin Demirović", "strAssist": "", "intTime": "45", "strTeam": "Bosnia-Herzegovina", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Jovo Lukić", "strAssist": "", "intTime": "45", "strTeam": "Bosnia-Herzegovina", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Luc de Fougerolles", "strAssist": "", "intTime": "53", "strTeam": "Canada", "strHome": "Yes"}], "2391729": [{"strTimeline": "Goal", "strTimelineDetail": "Own Goal", "strPlayer": "Damián Bobadilla", "strAssist": "", "intTime": "7", "strTeam": "USA", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Juan José Cáceres", "strAssist": "", "intTime": "10", "strTeam": "Paraguay", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Folarin Balogun", "strAssist": "Christian Pulisic", "intTime": "31", "strTeam": "USA", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Folarin Balogun", "strAssist": "Malik Tillman", "intTime": "45", "strTeam": "USA", "strHome": "Yes"}], "2391730": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Ismael Saibari", "strAssist": "Brahim Díaz", "intTime": "21", "strTeam": "Morocco", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Vinícius Júnior", "strAssist": "Bruno Guimarães", "intTime": "32", "strTeam": "Brazil", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Casemiro", "strAssist": "", "intTime": "37", "strTeam": "Brazil", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Roger Ibañez", "strAssist": "", "intTime": "43", "strTeam": "Brazil", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Roger Ibañez", "strAssist": "Danilo", "intTime": "46", "strTeam": "Brazil", "strHome": "Yes"}], "2391732": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Mahmud Abunada", "strAssist": "", "intTime": "16", "strTeam": "Qatar", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Penalty", "strPlayer": "Breel Embolo", "strAssist": "", "intTime": "17", "strTeam": "Switzerland", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Jassem Gaber", "strAssist": "", "intTime": "23", "strTeam": "Qatar", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Denis Zakaria", "strAssist": "", "intTime": "42", "strTeam": "Switzerland", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Jassem Gaber", "strAssist": "Karim Boudiaf", "intTime": "60", "strTeam": "Qatar", "strHome": "Yes"}], "2391731": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "John McGinn", "strAssist": "", "intTime": "28", "strTeam": "Scotland", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Jean-Ricner Bellegarde", "strAssist": "", "intTime": "39", "strTeam": "Haiti", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Aaron Hickey", "strAssist": "", "intTime": "46", "strTeam": "Scotland", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Louicius Deedson", "strAssist": "Josué Casimir", "intTime": "61", "strTeam": "Haiti", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Ben Gannon-Doak", "strAssist": "Ryan Christie", "intTime": "75", "strTeam": "Scotland", "strHome": "No"}], "2391733": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Felix Nmecha", "strAssist": "Florian Wirtz", "intTime": "6", "strTeam": "Germany", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Livano Comenencia", "strAssist": "", "intTime": "21", "strTeam": "Curaçao", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Nico Schlotterbeck", "strAssist": "Nathaniel Brown", "intTime": "38", "strTeam": "Germany", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Penalty", "strPlayer": "Kai Havertz", "strAssist": "", "intTime": "45", "strTeam": "Germany", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Sontje Hansen", "strAssist": "Jeremy Antonisse", "intTime": "46", "strTeam": "Curaçao", "strHome": "No"}], "2391734": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Seko Fofana", "strAssist": "", "intTime": "28", "strTeam": "Ivory Coast", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Franck Kessié", "strAssist": "", "intTime": "38", "strTeam": "Ivory Coast", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Guéla Doué", "strAssist": "", "intTime": "40", "strTeam": "Ivory Coast", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Alan Minda", "strAssist": "Nilson Angulo", "intTime": "56", "strTeam": "Ecuador", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Elye Wahi", "strAssist": "Ange-Yoan Bonny", "intTime": "56", "strTeam": "Ivory Coast", "strHome": "Yes"}], "2391736": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Marwan Attia", "strAssist": "", "intTime": "13", "strTeam": "Egypt", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Timothy Castagne", "strAssist": "", "intTime": "14", "strTeam": "Belgium", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Emam Ashour", "strAssist": "Mohamed Salah", "intTime": "19", "strTeam": "Egypt", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Ahmed Fatouh", "strAssist": "", "intTime": "34", "strTeam": "Egypt", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Timothy Castagne", "strAssist": "Nicolas Raskin", "intTime": "56", "strTeam": "Belgium", "strHome": "Yes"}], "2391738": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Abdulelah Al-Amri", "strAssist": "", "intTime": "41", "strTeam": "Saudi Arabia", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Abdulelah Al-Amri", "strAssist": "", "intTime": "44", "strTeam": "Saudi Arabia", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Darwin Núñez", "strAssist": "Agustín Canobbio", "intTime": "46", "strTeam": "Uruguay", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Matías Viña", "strAssist": "Juan Manuel Sanabria", "intTime": "46", "strTeam": "Uruguay", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Musab Al-Juwayr", "strAssist": "Nasser Al-Dawsari", "intTime": "63", "strTeam": "Saudi Arabia", "strHome": "Yes"}], "2391739": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Sidny Lopes Cabral", "strAssist": "", "intTime": "16", "strTeam": "Cape Verde", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Jovane Cabral", "strAssist": "Willy Semedo", "intTime": "61", "strTeam": "Cape Verde", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Dailon Livramento", "strAssist": "Nuno da Costa", "intTime": "61", "strTeam": "Cape Verde", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 3", "strPlayer": "Laros Duarte", "strAssist": "Deroy Duarte", "intTime": "61", "strTeam": "Cape Verde", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Fabián Ruiz", "strAssist": "Mikel Merino", "intTime": "71", "strTeam": "Spain", "strHome": "Yes"}], "2391737": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Elijah Just", "strAssist": "Chris Wood", "intTime": "7", "strTeam": "New Zealand", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Ramin Rezaeian", "strAssist": "", "intTime": "32", "strTeam": "Iran", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Aria Yousefi", "strAssist": "Mehdi Ghayedi", "intTime": "46", "strTeam": "Iran", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Shahriar Moghanlou", "strAssist": "Ali Alipour", "intTime": "53", "strTeam": "Iran", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Elijah Just", "strAssist": "Chris Wood", "intTime": "54", "strTeam": "New Zealand", "strHome": "No"}], "2391742": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Kylian Mbappé", "strAssist": "Michael Olise", "intTime": "66", "strTeam": "France", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Ismaïla Sarr", "strAssist": "Ibrahim Mbaye", "intTime": "75", "strTeam": "Senegal", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Lamine Camara", "strAssist": "Habib Diarra", "intTime": "76", "strTeam": "Senegal", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Ousmane Dembélé", "strAssist": "Bradley Barcola", "intTime": "80", "strTeam": "France", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Bradley Barcola", "strAssist": "Adrien Rabiot", "intTime": "82", "strTeam": "France", "strHome": "Yes"}], "2461107": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Erling Haaland", "strAssist": "David Møller Wolfe", "intTime": "29", "strTeam": "Norway", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Aymen Hussein", "strAssist": "Amir Al-Ammari", "intTime": "39", "strTeam": "Iraq", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Erling Haaland", "strAssist": "", "intTime": "43", "strTeam": "Norway", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Ali Al-Hamadi", "strAssist": "Marko Farji", "intTime": "59", "strTeam": "Iraq", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Zaid Ismail", "strAssist": "Zidane Iqbal", "intTime": "59", "strTeam": "Iraq", "strHome": "Yes"}], "2391740": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Lionel Messi", "strAssist": "Rodrigo de Paul", "intTime": "17", "strTeam": "Argentina", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Gonzalo Montiel", "strAssist": "Nahuel Molina", "intTime": "46", "strTeam": "Argentina", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Lautaro Martínez", "strAssist": "Julián Álvarez", "intTime": "55", "strTeam": "Argentina", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 3", "strPlayer": "Thiago Almada", "strAssist": "Nicolás González", "intTime": "55", "strTeam": "Argentina", "strHome": "Yes"}], "2391741": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Romano Schmid", "strAssist": "Xaver Schlager", "intTime": "21", "strTeam": "Austria", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Saša Kalajdžić", "strAssist": "Marko Arnautović", "intTime": "46", "strTeam": "Austria", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Ali Olwan", "strAssist": "Noor Al-Rawabdeh", "intTime": "50", "strTeam": "Jordan", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Phillipp Mwene", "strAssist": "Paul Wanner", "intTime": "59", "strTeam": "Austria", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 3", "strPlayer": "David Alaba", "strAssist": "Kevin Danso", "intTime": "59", "strTeam": "Austria", "strHome": "Yes"}], "2391743": [{"strTimeline": "Goal", "strTimelineDetail": "Penalty", "strPlayer": "Harry Kane", "strAssist": "", "intTime": "12", "strTeam": "England", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Martin Baturina", "strAssist": "Petar Sučić", "intTime": "36", "strTeam": "Croatia", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Harry Kane", "strAssist": "Declan Rice", "intTime": "42", "strTeam": "England", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Petar Musa", "strAssist": "Ivan Perišić", "intTime": "45", "strTeam": "Croatia", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Jude Bellingham", "strAssist": "Elliot Anderson", "intTime": "47", "strTeam": "England", "strHome": "Yes"}], "2391745": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Johan Mojica", "strAssist": "", "intTime": "7", "strTeam": "Colombia", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Abdukodir Khusanov", "strAssist": "", "intTime": "34", "strTeam": "Uzbekistan", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Daniel Muñoz", "strAssist": "Luis Díaz", "intTime": "40", "strTeam": "Colombia", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Oston Urunov", "strAssist": "Dostonbek Khamdamov", "intTime": "46", "strTeam": "Uzbekistan", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Sherzod Nasrullaev", "strAssist": "", "intTime": "46", "strTeam": "Uzbekistan", "strHome": "Yes"}], "2391746": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Derek Cornelius", "strAssist": "", "intTime": "9", "strTeam": "Canada", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Cyle Larin", "strAssist": "", "intTime": "16", "strTeam": "Canada", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Jonathan David", "strAssist": "", "intTime": "29", "strTeam": "Canada", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Red Card", "strPlayer": "Homam Ahmed", "strAssist": "", "intTime": "33", "strTeam": "Qatar", "strHome": "No"}], "2461109": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Michal Sadílek", "strAssist": "Alexandr Sojka", "intTime": "6", "strTeam": "Czech Republic", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Teboho Mokoena", "strAssist": "", "intTime": "33", "strTeam": "South Africa", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Thalente Mbatha", "strAssist": "", "intTime": "40", "strTeam": "South Africa", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Jayden Adams", "strAssist": "Relebohile Mofokeng", "intTime": "46", "strTeam": "South Africa", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Alexandr Sojka", "strAssist": "Jaroslav Zelený", "intTime": "55", "strTeam": "Czech Republic", "strHome": "Yes"}], "2391747": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Kang-in Lee", "strAssist": "", "intTime": "4", "strTeam": "South Korea", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Luis Romo", "strAssist": "", "intTime": "50", "strTeam": "Mexico", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Jae-sung Lee", "strAssist": "Hee-chan Hwang", "intTime": "57", "strTeam": "South Korea", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Heung-min Son", "strAssist": "Hyeon-gyu Oh", "intTime": "57", "strTeam": "South Korea", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Seung-ho Paik", "strAssist": "", "intTime": "58", "strTeam": "South Korea", "strHome": "No"}], "2391749": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Ismael Saibari", "strAssist": "Brahim Díaz", "intTime": "2", "strTeam": "Morocco", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Issa Diop", "strAssist": "", "intTime": "23", "strTeam": "Morocco", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Kieran Tierney", "strAssist": "Ben Gannon-Doak", "intTime": "60", "strTeam": "Scotland", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Andrew Robertson", "strAssist": "", "intTime": "65", "strTeam": "Scotland", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Che Adams", "strAssist": "Lyndon Dykes", "intTime": "71", "strTeam": "Scotland", "strHome": "Yes"}], "2391750": [{"strTimeline": "Goal", "strTimelineDetail": "Own Goal", "strPlayer": "Cameron Burgess", "strAssist": "", "intTime": "11", "strTeam": "USA", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Jordan Bos", "strAssist": "", "intTime": "16", "strTeam": "Australia", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Alessandro Circati", "strAssist": "", "intTime": "32", "strTeam": "Australia", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Alex Freeman", "strAssist": "", "intTime": "43", "strTeam": "USA", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Cameron Burgess", "strAssist": "Jason Geria", "intTime": "46", "strTeam": "Australia", "strHome": "No"}], "2391748": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Carlens Arcus", "strAssist": "", "intTime": "4", "strTeam": "Haiti", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Matheus Cunha", "strAssist": "", "intTime": "23", "strTeam": "Brazil", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Matheus Cunha", "strAssist": "Vinícius Júnior", "intTime": "36", "strTeam": "Brazil", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Raphinha", "strAssist": "Rayan", "intTime": "40", "strTeam": "Brazil", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Vinícius Júnior", "strAssist": "Lucas Paquetá", "intTime": "45", "strTeam": "Brazil", "strHome": "Yes"}], "2391752": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Franck Kessié", "strAssist": "", "intTime": "30", "strTeam": "Ivory Coast", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Nico Schlotterbeck", "strAssist": "Antonio Rüdiger", "intTime": "46", "strTeam": "Germany", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Aleksandar Pavlović", "strAssist": "Nadiem Amiri", "intTime": "60", "strTeam": "Germany", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 3", "strPlayer": "Jamal Musiala", "strAssist": "Deniz Undav", "intTime": "60", "strTeam": "Germany", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 4", "strPlayer": "Leroy Sané", "strAssist": "Jamie Leweling", "intTime": "60", "strTeam": "Germany", "strHome": "Yes"}], "2461111": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Matías Galarza", "strAssist": "Julio Enciso", "intTime": "2", "strTeam": "Paraguay", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Matías Galarza", "strAssist": "", "intTime": "4", "strTeam": "Paraguay", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Red Card", "strPlayer": "Miguel Almirón", "strAssist": "", "intTime": "45", "strTeam": "Paraguay", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Isidro Pitta", "strAssist": "Damián Bobadilla", "intTime": "46", "strTeam": "Paraguay", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Kerem Aktürkoğlu", "strAssist": "Barış Alper Yılmaz", "intTime": "46", "strTeam": "Turkey", "strHome": "Yes"}], "2391751": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Jordy Alcívar", "strAssist": "", "intTime": "38", "strTeam": "Ecuador", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Leandro Bacuna", "strAssist": "", "intTime": "39", "strTeam": "Curaçao", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Jordy Alcívar", "strAssist": "Kevin Rodríguez", "intTime": "46", "strTeam": "Ecuador", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Juninho Bacuna", "strAssist": "", "intTime": "53", "strTeam": "Curaçao", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Livano Comenencia", "strAssist": "", "intTime": "56", "strTeam": "Curaçao", "strHome": "No"}], "2391753": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Daichi Kamada", "strAssist": "Keito Nakamura", "intTime": "4", "strTeam": "Japan", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Ayase Ueda", "strAssist": "Kō Itakura", "intTime": "31", "strTeam": "Japan", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Elias Saad", "strAssist": "Ismaël Gharbi", "intTime": "46", "strTeam": "Tunisia", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Dylan Bronn", "strAssist": "Mohamed Amine Ben Hamida", "intTime": "46", "strTeam": "Tunisia", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 3", "strPlayer": "Sebastian Tounekti", "strAssist": "Firas Chaouat", "intTime": "65", "strTeam": "Tunisia", "strHome": "Yes"}], "2391754": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Romelu Lukaku", "strAssist": "", "intTime": "3", "strTeam": "Belgium", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Saeid Ezatolahi", "strAssist": "", "intTime": "33", "strTeam": "Iran", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Saleh Hardani", "strAssist": "Alireza Jahanbakhsh", "intTime": "46", "strTeam": "Iran", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Thomas Meunier", "strAssist": "Timothy Castagne", "intTime": "58", "strTeam": "Belgium", "strHome": "Yes"}], "2391755": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Finn Surman", "strAssist": "Tim Payne", "intTime": "15", "strTeam": "New Zealand", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Mohanad Lasheen", "strAssist": "", "intTime": "17", "strTeam": "Egypt", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Sarpreet Singh", "strAssist": "", "intTime": "20", "strTeam": "New Zealand", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Callum McCowatt", "strAssist": "", "intTime": "34", "strTeam": "New Zealand", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Hamdy Fathy", "strAssist": "Ramy Rabia", "intTime": "41", "strTeam": "Egypt", "strHome": "No"}], "2391758": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Lionel Messi", "strAssist": "Facundo Medina", "intTime": "38", "strTeam": "Argentina", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Stefan Posch", "strAssist": "", "intTime": "40", "strTeam": "Austria", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Cristian Romero", "strAssist": "Nicolás Otamendi", "intTime": "57", "strTeam": "Argentina", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Thiago Almada", "strAssist": "Julián Álvarez", "intTime": "64", "strTeam": "Argentina", "strHome": "Yes"}], "2461113": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Amir Al-Ammari", "strAssist": "", "intTime": "6", "strTeam": "Iraq", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Kylian Mbappé", "strAssist": "Michael Olise", "intTime": "14", "strTeam": "France", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Aymen Hussein", "strAssist": "Ali Al-Hamadi", "intTime": "26", "strTeam": "Iraq", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Kylian Mbappé", "strAssist": "Ousmane Dembélé", "intTime": "54", "strTeam": "France", "strHome": "Yes"}], "2391759": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Nizar Al-Rashdan", "strAssist": "Musa Al-Taamari", "intTime": "36", "strTeam": "Jordan", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Ramiz Zerrouki", "strAssist": "", "intTime": "44", "strTeam": "Algeria", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Ramiz Zerrouki", "strAssist": "Nabil Bentaleb", "intTime": "46", "strTeam": "Algeria", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Hicham Boudaoui", "strAssist": "Nadhir Benbouali", "intTime": "46", "strTeam": "Algeria", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Husam Abu Dahab", "strAssist": "", "intTime": "64", "strTeam": "Jordan", "strHome": "Yes"}], "2391760": [{"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Julian Ryerson", "strAssist": "Marcus Pedersen", "intTime": "13", "strTeam": "Norway", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Marcus Pedersen", "strAssist": "", "intTime": "43", "strTeam": "Norway", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Fredrik Aursnes", "strAssist": "Patrick Berg", "intTime": "46", "strTeam": "Norway", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Erling Haaland", "strAssist": "Martin Ødegaard", "intTime": "48", "strTeam": "Norway", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Ismaïla Sarr", "strAssist": "Sadio Mané", "intTime": "53", "strTeam": "Senegal", "strHome": "No"}], "2391761": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Declan Rice", "strAssist": "", "intTime": "41", "strTeam": "England", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Iñaki Williams", "strAssist": "", "intTime": "60", "strTeam": "Ghana", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Anthony Gordon", "strAssist": "Bukayo Saka", "intTime": "65", "strTeam": "England", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Djed Spence", "strAssist": "Nico O'Reilly", "intTime": "66", "strTeam": "England", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Iñaki Williams", "strAssist": "Abdul Fatawu", "intTime": "66", "strTeam": "Ghana", "strHome": "No"}], "2391764": [{"strTimeline": "Goal", "strTimelineDetail": "Own Goal", "strPlayer": "Bono", "strAssist": "", "intTime": "10", "strTeam": "Haiti", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Achraf Hakimi", "strAssist": "", "intTime": "39", "strTeam": "Morocco", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Wilson Isidor", "strAssist": "Jean-Kevin Duverne", "intTime": "43", "strTeam": "Haiti", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Ismael Saibari", "strAssist": "Achraf Hakimi", "intTime": "45", "strTeam": "Morocco", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Ruben Providence", "strAssist": "Duckens Nazon", "intTime": "67", "strTeam": "Haiti", "strHome": "No"}], "2391765": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Vinícius Júnior", "strAssist": "Rayan", "intTime": "7", "strTeam": "Brazil", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Vinícius Júnior", "strAssist": "Bruno Guimarães", "intTime": "45", "strTeam": "Brazil", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Andrew Robertson", "strAssist": "Kieran Tierney", "intTime": "46", "strTeam": "Scotland", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Matheus Cunha", "strAssist": "Bruno Guimarães", "intTime": "60", "strTeam": "Brazil", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Danilo", "strAssist": "", "intTime": "62", "strTeam": "Brazil", "strHome": "No"}], "2391767": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Granit Xhaka", "strAssist": "", "intTime": "32", "strTeam": "Switzerland", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Cyle Larin", "strAssist": "", "intTime": "32", "strTeam": "Canada", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Rubén Vargas", "strAssist": "Johan Manzambi", "intTime": "46", "strTeam": "Switzerland", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Johan Manzambi", "strAssist": "Breel Embolo", "intTime": "57", "strTeam": "Switzerland", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Cyle Larin", "strAssist": "Tani Oluwaseyi", "intTime": "58", "strTeam": "Canada", "strHome": "No"}], "2391766": [{"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Hee-chan Hwang", "strAssist": "Heung-min Son", "intTime": "46", "strTeam": "South Korea", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Seung-ho Paik", "strAssist": "Jin-gyu Kim", "intTime": "46", "strTeam": "South Korea", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 3", "strPlayer": "Tae-seok Lee", "strAssist": "Jens Castrop", "intTime": "46", "strTeam": "South Korea", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Oswin Appollis", "strAssist": "Tshepang Moremi", "intTime": "62", "strTeam": "South Africa", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Thapelo Maseko", "strAssist": "Tshepang Moremi", "intTime": "63", "strTeam": "South Africa", "strHome": "Yes"}], "2391768": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Nicolas Pépé", "strAssist": "Yan Diomande", "intTime": "7", "strTeam": "Ivory Coast", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Nicolas Pépé", "strAssist": "", "intTime": "35", "strTeam": "Ivory Coast", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Amad Diallo", "strAssist": "Christ Inao Oulaï", "intTime": "46", "strTeam": "Ivory Coast", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Livano Comenencia", "strAssist": "Jeremy Antonisse", "intTime": "61", "strTeam": "Curaçao", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Nicolas Pépé", "strAssist": "Ibrahim Sangaré", "intTime": "64", "strTeam": "Ivory Coast", "strHome": "No"}], "2391769": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Leroy Sané", "strAssist": "Florian Wirtz", "intTime": "2", "strTeam": "Germany", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Nilson Angulo", "strAssist": "Pedro Vite", "intTime": "9", "strTeam": "Ecuador", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Piero Hincapié", "strAssist": "", "intTime": "43", "strTeam": "Ecuador", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Aleksandar Pavlović", "strAssist": "", "intTime": "44", "strTeam": "Germany", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Aleksandar Pavlović", "strAssist": "Angelo Stiller", "intTime": "46", "strTeam": "Germany", "strHome": "No"}], "2391770": [{"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Alexandro Maidana", "strAssist": "Maurício", "intTime": "46", "strTeam": "Paraguay", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Jackson Irvine", "strAssist": "", "intTime": "46", "strTeam": "Australia", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Cristian Volpato", "strAssist": "Ajdin Hrustic", "intTime": "58", "strTeam": "Australia", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Gabriel Ávalos", "strAssist": "Álex Arce", "intTime": "67", "strTeam": "Paraguay", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Diego Gómez", "strAssist": "", "intTime": "77", "strTeam": "Paraguay", "strHome": "Yes"}], "2391775": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Ousmane Dembélé", "strAssist": "Kylian Mbappé", "intTime": "7", "strTeam": "France", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Patrick Berg", "strAssist": "", "intTime": "10", "strTeam": "Norway", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Ousmane Dembélé", "strAssist": "Kylian Mbappé", "intTime": "20", "strTeam": "France", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Thelo Aasgaard", "strAssist": "Andreas Schjelderup", "intTime": "21", "strTeam": "Norway", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Ousmane Dembélé", "strAssist": "Aurélien Tchouaméni", "intTime": "32", "strTeam": "France", "strHome": "No"}], "2461118": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Auston Trusty", "strAssist": "Sebastian Berhalter", "intTime": "3", "strTeam": "USA", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Arda Güler", "strAssist": "Barış Alper Yılmaz", "intTime": "10", "strTeam": "Turkey", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Sebastian Berhalter", "strAssist": "", "intTime": "19", "strTeam": "USA", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Barış Alper Yılmaz", "strAssist": "Orkun Kökçü", "intTime": "31", "strTeam": "Turkey", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Sebastian Berhalter", "strAssist": "", "intTime": "49", "strTeam": "USA", "strHome": "No"}], "2391772": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Saud Abdulhamid", "strAssist": "", "intTime": "4", "strTeam": "Saudi Arabia", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Wagner Pina", "strAssist": "", "intTime": "8", "strTeam": "Cape Verde", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Hassan Al-Tambakti", "strAssist": "Ali Lajami", "intTime": "33", "strTeam": "Saudi Arabia", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Abdullah Al-Khaibari", "strAssist": "Musab Al-Juwayr", "intTime": "46", "strTeam": "Saudi Arabia", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Willy Semedo", "strAssist": "Hélio Varela", "intTime": "61", "strTeam": "Cape Verde", "strHome": "Yes"}], "2391773": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Mahmoud Abdelmohsen Hassan", "strAssist": "Trézéguet", "intTime": "5", "strTeam": "Egypt", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Missed Penalty", "strPlayer": "Mehdi Taremi", "strAssist": "", "intTime": "11", "strTeam": "Iran", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Mohamed Abdelmonem", "strAssist": "Yasser Ibrahim", "intTime": "14", "strTeam": "Egypt", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Ramin Rezaeian", "strAssist": "", "intTime": "14", "strTeam": "Iran", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Hossein Kanaanizadegan", "strAssist": "", "intTime": "19", "strTeam": "Iran", "strHome": "No"}], "2391774": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Leandro Trossard", "strAssist": "", "intTime": "21", "strTeam": "Belgium", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Leandro Trossard", "strAssist": "", "intTime": "28", "strTeam": "Belgium", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Marko Stamenic", "strAssist": "", "intTime": "46", "strTeam": "New Zealand", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Ryan Thomas", "strAssist": "Ben Old", "intTime": "46", "strTeam": "New Zealand", "strHome": "Yes"}], "2391777": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Marko Arnautović", "strAssist": "", "intTime": "11", "strTeam": "Austria", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Marko Arnautović", "strAssist": "David Alaba", "intTime": "28", "strTeam": "Austria", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Rafik Belghali", "strAssist": "", "intTime": "45", "strTeam": "Algeria", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Marko Arnautović", "strAssist": "Michael Gregoritsch", "intTime": "46", "strTeam": "Austria", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Xaver Schlager", "strAssist": "Florian Grillitsch", "intTime": "46", "strTeam": "Austria", "strHome": "No"}], "2391780": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Mohannad Abu Taha", "strAssist": "", "intTime": "17", "strTeam": "Jordan", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Giovani Lo Celso", "strAssist": "", "intTime": "19", "strTeam": "Argentina", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Penalty", "strPlayer": "Lautaro Martínez", "strAssist": "", "intTime": "31", "strTeam": "Argentina", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Odeh Al-Fakhouri", "strAssist": "Mahmoud Al-Mardi", "intTime": "46", "strTeam": "Jordan", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Ali Azaizeh", "strAssist": "Musa Al-Taamari", "intTime": "46", "strTeam": "Jordan", "strHome": "Yes"}], "2499618": [{"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Relebohile Mofokeng", "strAssist": "Thalente Mbatha", "intTime": "46", "strTeam": "South Africa", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Nathan Saliba", "strAssist": "", "intTime": "54", "strTeam": "Canada", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Moïse Bombito", "strAssist": "Luc de Fougerolles", "intTime": "59", "strTeam": "Canada", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Nathan Saliba", "strAssist": "Niko Sigur", "intTime": "59", "strTeam": "Canada", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Niko Sigur", "strAssist": "", "intTime": "67", "strTeam": "Canada", "strHome": "No"}], "2499835": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Kaishū Sano", "strAssist": "", "intTime": "12", "strTeam": "Japan", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Casemiro", "strAssist": "", "intTime": "14", "strTeam": "Brazil", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Kaishū Sano", "strAssist": "", "intTime": "29", "strTeam": "Japan", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Daichi Kamada", "strAssist": "", "intTime": "45", "strTeam": "Japan", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Lucas Paquetá", "strAssist": "Endrick", "intTime": "46", "strTeam": "Brazil", "strHome": "Yes"}], "2502846": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Julio Enciso", "strAssist": "Matías Galarza", "intTime": "42", "strTeam": "Paraguay", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Felix Nmecha", "strAssist": "Leon Goretzka", "intTime": "46", "strTeam": "Germany", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Kai Havertz", "strAssist": "Florian Wirtz", "intTime": "54", "strTeam": "Germany", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Gabriel Ávalos", "strAssist": "Gustavo Caballero", "intTime": "55", "strTeam": "Paraguay", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Julio Enciso", "strAssist": "Maurício", "intTime": "57", "strTeam": "Paraguay", "strHome": "No"}], "2499836": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Issa Diop", "strAssist": "", "intTime": "47", "strTeam": "Morocco", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Brian Brobbey", "strAssist": "Wout Weghorst", "intTime": "71", "strTeam": "Netherlands", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Nathan Aké", "strAssist": "Teun Koopmeiners", "intTime": "71", "strTeam": "Netherlands", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Cody Gakpo", "strAssist": "Crysencio Summerville", "intTime": "72", "strTeam": "Netherlands", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Chadi Riad", "strAssist": "Anass Salah-Eddine", "intTime": "75", "strTeam": "Morocco", "strHome": "No"}], "2502605": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Antonio Nusa", "strAssist": "Martin Ødegaard", "intTime": "39", "strTeam": "Norway", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Antonio Nusa", "strAssist": "", "intTime": "45", "strTeam": "Norway", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Christ Inao Oulaï", "strAssist": "Amad Diallo", "intTime": "60", "strTeam": "Ivory Coast", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Ange-Yoan Bonny", "strAssist": "Elye Wahi", "intTime": "60", "strTeam": "Ivory Coast", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Alexander Sørloth", "strAssist": "Oscar Bobb", "intTime": "71", "strTeam": "Norway", "strHome": "No"}], "2502847": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Kylian Mbappé", "strAssist": "Ousmane Dembélé", "intTime": "45", "strTeam": "France", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Bradley Barcola", "strAssist": "Michael Olise", "intTime": "53", "strTeam": "France", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Elliot Stroud", "strAssist": "Taha Ali", "intTime": "66", "strTeam": "Sweden", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Lucas Bergvall", "strAssist": "Besfort Zeneli", "intTime": "66", "strTeam": "Sweden", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Kylian Mbappé", "strAssist": "Michael Olise", "intTime": "74", "strTeam": "France", "strHome": "Yes"}], "2503390": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Julián Quiñones", "strAssist": "Roberto Alvarado", "intTime": "22", "strTeam": "Mexico", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Raúl Jiménez", "strAssist": "Julián Quiñones", "intTime": "31", "strTeam": "Mexico", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Alan Franco", "strAssist": "", "intTime": "45", "strTeam": "Ecuador", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Joel Ordóñez", "strAssist": "Angelo Preciado Quiñónez", "intTime": "46", "strTeam": "Ecuador", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Alan Franco", "strAssist": "Yaimar Medina", "intTime": "46", "strTeam": "Ecuador", "strHome": "No"}], "2503391": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Brian Cipenga", "strAssist": "Chancel Mbemba", "intTime": "7", "strTeam": "DR Congo", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Jude Bellingham", "strAssist": "", "intTime": "19", "strTeam": "England", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Noah Sadiki", "strAssist": "", "intTime": "27", "strTeam": "DR Congo", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Noni Madueke", "strAssist": "Bukayo Saka", "intTime": "60", "strTeam": "England", "strHome": "Yes"}], "2503392": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Habib Diarra", "strAssist": "", "intTime": "25", "strTeam": "Senegal", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Charles De Ketelaere", "strAssist": "Romelu Lukaku", "intTime": "46", "strTeam": "Belgium", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Ismaïla Sarr", "strAssist": "Moussa Niakhaté", "intTime": "51", "strTeam": "Senegal", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Kevin De Bruyne", "strAssist": "Nicolas Raskin", "intTime": "56", "strTeam": "Belgium", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 3", "strPlayer": "Jérémy Doku", "strAssist": "Dodi Lukébakio", "intTime": "56", "strTeam": "Belgium", "strHome": "Yes"}], "2499837": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Folarin Balogun", "strAssist": "", "intTime": "45", "strTeam": "USA", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Armin Gigović", "strAssist": "Esmir Bajraktarević", "intTime": "51", "strTeam": "Bosnia-Herzegovina", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Ivan Šunjić", "strAssist": "Benjamin Tahirović", "intTime": "51", "strTeam": "Bosnia-Herzegovina", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 3", "strPlayer": "Edin Džeko", "strAssist": "Ermin Mahmić", "intTime": "51", "strTeam": "Bosnia-Herzegovina", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Red Card", "strPlayer": "Folarin Balogun", "strAssist": "", "intTime": "64", "strTeam": "USA", "strHome": "Yes"}], "2503393": [{"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Rúben Dias", "strAssist": "", "intTime": "17", "strTeam": "Portugal", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Ante Budimir", "strAssist": "Igor Matanović", "intTime": "46", "strTeam": "Croatia", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Ivan Perišić", "strAssist": "", "intTime": "53", "strTeam": "Croatia", "strHome": "No"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Luka Modrić", "strAssist": "", "intTime": "59", "strTeam": "Croatia", "strHome": "No"}], "2503636": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Mikel Oyarzabal", "strAssist": "Marc Cucurella", "intTime": "36", "strTeam": "Spain", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Nicolas Seiwald", "strAssist": "Carney Chukwuemeka", "intTime": "46", "strTeam": "Austria", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Xaver Schlager", "strAssist": "Florian Grillitsch", "intTime": "46", "strTeam": "Austria", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 3", "strPlayer": "Michael Gregoritsch", "strAssist": "Marko Arnautović", "intTime": "60", "strTeam": "Austria", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 4", "strPlayer": "Romano Schmid", "strAssist": "Saša Kalajdžić", "intTime": "60", "strTeam": "Austria", "strHome": "No"}], "2502848": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Emam Ashour", "strAssist": "Karim Hafez", "intTime": "13", "strTeam": "Egypt", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Jordan Bos", "strAssist": "Kai Trewin", "intTime": "46", "strTeam": "Australia", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Own Goal", "strPlayer": "Mohamed Hany", "strAssist": "", "intTime": "55", "strTeam": "Australia", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Mostafa Ziko", "strAssist": "Haissem Hassan", "intTime": "67", "strTeam": "Egypt", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Hamdy Fathy", "strAssist": "Hossam Abdelmaguid", "intTime": "67", "strTeam": "Egypt", "strHome": "No"}], "2502849": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Lionel Messi", "strAssist": "Lisandro Martínez", "intTime": "29", "strTeam": "Argentina", "strHome": "Yes"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Deroy Duarte", "strAssist": "Ryan Mendes", "intTime": "59", "strTeam": "Cape Verde", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Thiago Almada", "strAssist": "Nicolás González", "intTime": "63", "strTeam": "Argentina", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Lautaro Martínez", "strAssist": "Julián Álvarez", "intTime": "63", "strTeam": "Argentina", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Nuno da Costa", "strAssist": "Dailon Livramento", "intTime": "67", "strTeam": "Cape Verde", "strHome": "No"}], "2503635": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Breel Embolo", "strAssist": "Johan Manzambi", "intTime": "10", "strTeam": "Switzerland", "strHome": "Yes"}, {"strTimeline": "Card", "strTimelineDetail": "Yellow Card", "strPlayer": "Farès Chaïbi", "strAssist": "", "intTime": "36", "strTeam": "Algeria", "strHome": "No"}, {"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Dan Ndoye", "strAssist": "", "intTime": "46", "strTeam": "Switzerland", "strHome": "Yes"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 1", "strPlayer": "Houssem Aouar", "strAssist": "Jaouen Hadjam", "intTime": "58", "strTeam": "Algeria", "strHome": "No"}, {"strTimeline": "subst", "strTimelineDetail": "Substitution 2", "strPlayer": "Ramiz Zerrouki", "strAssist": "Amine Gouiri", "intTime": "58", "strTeam": "Algeria", "strHome": "No"}], "2503394": [{"strTimeline": "Goal", "strTimelineDetail": "Normal Goal", "strPlayer": "Jhon Arias", "strAssist": null, "intTime": "14", "strTeam": "Colombia", "strHome": "Yes"}]}};
+
 (function(){
   "use strict";
 
-  // ---------- Config ----------
-  var API_KEY = "3"; // clave de prueba pública de TheSportsDB. Cambiar por una clave Patreon/API-Football para cobertura 100% completa.
+  /* ---------- Config ---------- */
+  var API_KEY = "3"; // Clave pública de prueba de TheSportsDB. Cámbiala por una de pago para cobertura 100%.
   var BASE = "https://www.thesportsdb.com/api/v1/json/" + API_KEY;
-  var LEAGUE_ID = "4429"; // FIFA World Cup
-  var SEASON = "2026";
-  var TOURNAMENT_START = "2026-06-11";
-  var TOURNAMENT_END = "2026-07-19";
-  var REFRESH_INTERVAL_MS = 90000;
-  var THROTTLE_MS = 380;
-  var CACHE_KEY = "wc2026_tracker_cache_v1";
+  var LEAGUE = "4429", SEASON = "2026";
+  var T_START = "2026-06-11", T_END = "2026-07-19";
+  var REFRESH_MS = 90000, THROTTLE_MS = 380, REQ_TIMEOUT = 12000;
+  var CACHE_KEY = "wc2026_v2";
   var FINISHED = ["FT","AET","PEN","AP","FT_PEN"];
 
-  // ---------- Request queue (throttled, with 429 backoff) ----------
-  var queue = [];
-  var queueRunning = false;
-  function enqueue(url){
-    return new Promise(function(resolve, reject){
-      queue.push({url: url, resolve: resolve, reject: reject, retries: 0});
-      runQueue();
-    });
-  }
-  var REQUEST_TIMEOUT_MS = 12000;
-  function fetchWithTimeout(url){
-    var controller = new AbortController();
-    var timer = setTimeout(function(){ controller.abort(); }, REQUEST_TIMEOUT_MS);
-    return fetch(url, { signal: controller.signal }).finally(function(){ clearTimeout(timer); });
-  }
-  function runQueue(){
-    if (queueRunning) return;
-    queueRunning = true;
-    step();
-    function step(){
-      if (!queue.length){ queueRunning = false; return; }
-      var job = queue.shift();
-      fetchWithTimeout(job.url).then(function(r){
-        if (r.status === 429){
-          job.retries++;
-          if (job.retries <= 4){
-            var wait = Math.min(8000, 1000 * Math.pow(2, job.retries));
-            setTimeout(function(){ queue.unshift(job); setTimeout(step, wait); }, 0);
-            return;
-          }
-          job.resolve(null);
-          setTimeout(step, THROTTLE_MS);
-          return;
-        }
-        if (!r.ok){ job.resolve(null); setTimeout(step, THROTTLE_MS); return; }
-        r.json().then(function(data){ job.resolve(data); setTimeout(step, THROTTLE_MS); })
-                 .catch(function(){ job.resolve(null); setTimeout(step, THROTTLE_MS); });
-      }).catch(function(){ job.resolve(null); setTimeout(step, THROTTLE_MS); });
-    }
-  }
+  /* ---------- Traducciones de selecciones + banderas ---------- */
+  var ES = {
+    "Algeria":"Argelia","Argentina":"Argentina","Australia":"Australia","Austria":"Austria",
+    "Belgium":"Bélgica","Bosnia-Herzegovina":"Bosnia y Herzegovina","Brazil":"Brasil","Canada":"Canadá",
+    "Cape Verde":"Cabo Verde","Colombia":"Colombia","Croatia":"Croacia","Curaçao":"Curazao",
+    "Czech Republic":"Rep. Checa","DR Congo":"RD del Congo","Ecuador":"Ecuador","Egypt":"Egipto",
+    "England":"Inglaterra","France":"Francia","Germany":"Alemania","Ghana":"Ghana","Haiti":"Haití",
+    "Iran":"Irán","Iraq":"Irak","Ivory Coast":"Costa de Marfil","Japan":"Japón","Jordan":"Jordania",
+    "Mexico":"México","Morocco":"Marruecos","Netherlands":"Países Bajos","New Zealand":"Nueva Zelanda",
+    "Norway":"Noruega","Paraguay":"Paraguay","Portugal":"Portugal","Qatar":"Catar",
+    "Saudi Arabia":"Arabia Saudí","Scotland":"Escocia","Senegal":"Senegal","South Africa":"Sudáfrica",
+    "South Korea":"Corea del Sur","Spain":"España","Sweden":"Suecia","Switzerland":"Suiza",
+    "Tunisia":"Túnez","Turkey":"Turquía","USA":"Estados Unidos","Uruguay":"Uruguay","Uzbekistan":"Uzbekistán",
+    "Panama":"Panamá","Peru":"Perú","Nigeria":"Nigeria","Cameroon":"Camerún","Poland":"Polonia",
+    "Denmark":"Dinamarca","Italy":"Italia","Wales":"Gales","Serbia":"Serbia","Ukraine":"Ucrania"
+  };
+  var FLAG = {
+    "Algeria":"🇩🇿","Argentina":"🇦🇷","Australia":"🇦🇺","Austria":"🇦🇹","Belgium":"🇧🇪",
+    "Bosnia-Herzegovina":"🇧🇦","Brazil":"🇧🇷","Canada":"🇨🇦","Cape Verde":"🇨🇻","Colombia":"🇨🇴",
+    "Croatia":"🇭🇷","Curaçao":"🇨🇼","Czech Republic":"🇨🇿","DR Congo":"🇨🇩","Ecuador":"🇪🇨",
+    "Egypt":"🇪🇬","England":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","France":"🇫🇷","Germany":"🇩🇪","Ghana":"🇬🇭","Haiti":"🇭🇹",
+    "Iran":"🇮🇷","Iraq":"🇮🇶","Ivory Coast":"🇨🇮","Japan":"🇯🇵","Jordan":"🇯🇴","Mexico":"🇲🇽",
+    "Morocco":"🇲🇦","Netherlands":"🇳🇱","New Zealand":"🇳🇿","Norway":"🇳🇴","Paraguay":"🇵🇾",
+    "Portugal":"🇵🇹","Qatar":"🇶🇦","Saudi Arabia":"🇸🇦","Scotland":"🏴󠁧󠁢󠁳󠁣󠁴󠁿","Senegal":"🇸🇳",
+    "South Africa":"🇿🇦","South Korea":"🇰🇷","Spain":"🇪🇸","Sweden":"🇸🇪","Switzerland":"🇨🇭",
+    "Tunisia":"🇹🇳","Turkey":"🇹🇷","USA":"🇺🇸","Uruguay":"🇺🇾","Uzbekistan":"🇺🇿",
+    "Panama":"🇵🇦","Peru":"🇵🇪","Nigeria":"🇳🇬","Cameroon":"🇨🇲","Poland":"🇵🇱","Denmark":"🇩🇰",
+    "Italy":"🇮🇹","Wales":"🏴󠁧󠁢󠁷󠁬󠁳󠁿","Serbia":"🇷🇸","Ukraine":"🇺🇦"
+  };
+  function T(n){ return ES[n] || n; }
+  function flag(n){ return FLAG[n] || "🏳️"; }
 
-  // ---------- Cache ----------
-  var cache = loadCache();
-  function loadCache(){
-    try{
-      var raw = localStorage.getItem(CACHE_KEY);
-      if (raw) return JSON.parse(raw);
-    }catch(e){}
-    return { days: {}, timelines: {}, lastFullSync: null };
+  /* ---------- Estado / caché ---------- */
+  var cache = load();
+  function load(){
+    try{ var r = localStorage.getItem(CACHE_KEY); if(r) return JSON.parse(r); }catch(e){}
+    return { days:{}, timelines:{}, lastSync:null };
   }
-  function saveCache(){
-    try{ localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); }catch(e){}
-  }
+  function save(){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); }catch(e){} }
 
-  function dateRange(startISO, endISO){
-    var dates = [];
-    var d = new Date(startISO + "T00:00:00Z");
-    var end = new Date(endISO + "T00:00:00Z");
-    while (d <= end){
-      dates.push(d.toISOString().slice(0,10));
-      d.setUTCDate(d.getUTCDate() + 1);
-    }
-    return dates;
-  }
-  var ALL_DATES = dateRange(TOURNAMENT_START, TOURNAMENT_END);
+  // Índice base desde el SEED
+  var seedById = {};
+  (SEED.events||[]).forEach(function(e){ seedById[e.idEvent] = e; });
 
-  function dayIsFinalized(dateStr){
-    var day = cache.days[dateStr];
-    if (!day || !day.events || !day.events.length) return false;
-    return day.events.every(function(e){ return FINISHED.indexOf(e.strStatus) !== -1; });
+  function dateRange(a,b){
+    var out=[], d=new Date(a+"T00:00:00Z"), end=new Date(b+"T00:00:00Z");
+    while(d<=end){ out.push(d.toISOString().slice(0,10)); d.setUTCDate(d.getUTCDate()+1); }
+    return out;
   }
+  var DATES = dateRange(T_START, T_END);
 
-  function fetchDay(dateStr){
-    var url = BASE + "/eventsday.php?l=" + LEAGUE_ID + "&d=" + dateStr;
-    return enqueue(url).then(function(data){
-      var events = (data && data.events) || [];
-      cache.days[dateStr] = { events: events, fetchedAt: Date.now() };
-      saveCache();
-      return events;
-    });
-  }
-
-  function allEvents(){
-    var out = [];
-    ALL_DATES.forEach(function(d){
+  // Eventos combinados: SEED como base, datos en vivo (cache.days) sobrescriben por id
+  function mergedEvents(){
+    var byId = {};
+    (SEED.events||[]).forEach(function(e){ byId[e.idEvent] = e; });
+    DATES.forEach(function(d){
       var day = cache.days[d];
-      if (day && day.events) out = out.concat(day.events);
+      if(day && day.events) day.events.forEach(function(e){ byId[e.idEvent] = e; });
     });
-    var seen = {};
-    return out.filter(function(e){
-      if (seen[e.idEvent]) return false;
-      seen[e.idEvent] = true;
-      return true;
-    });
+    return Object.keys(byId).map(function(k){ return byId[k]; });
+  }
+  function getTimeline(id){
+    if(cache.timelines[id]) return cache.timelines[id];
+    if(SEED.timelines && SEED.timelines[id]) return SEED.timelines[id];
+    return null;
+  }
+  function isFinished(e){ return FINISHED.indexOf(e.strStatus) !== -1; }
+  function isLive(e){ var s=e.strStatus; return s && !isFinished(e) && ["NS","PST","CANC","TBD",""].indexOf(s)===-1; }
+
+  /* ---------- Cola de peticiones (timeout + backoff 429) ---------- */
+  var queue=[], running=false;
+  function enqueue(url){
+    return new Promise(function(res){ queue.push({url:url,res:res,r:0}); pump(); });
+  }
+  function fetchT(url){
+    var c=new AbortController(), t=setTimeout(function(){c.abort();},REQ_TIMEOUT);
+    return fetch(url,{signal:c.signal}).finally(function(){clearTimeout(t);});
+  }
+  function pump(){
+    if(running) return; running=true;
+    (function step(){
+      if(!queue.length){ running=false; return; }
+      var j=queue.shift();
+      fetchT(j.url).then(function(r){
+        if(r.status===429){ j.r++; if(j.r<=4){ var w=Math.min(8000,1000*Math.pow(2,j.r)); queue.unshift(j); setTimeout(step,w); return; } j.res(null); setTimeout(step,THROTTLE_MS); return; }
+        if(!r.ok){ j.res(null); setTimeout(step,THROTTLE_MS); return; }
+        r.json().then(function(d){ j.res(d); setTimeout(step,THROTTLE_MS); }).catch(function(){ j.res(null); setTimeout(step,THROTTLE_MS); });
+      }).catch(function(){ j.res(null); setTimeout(step,THROTTLE_MS); });
+    })();
   }
 
-  // ---------- Sync ----------
-  var statusDot = document.getElementById("statusDot");
-  var statusText = document.getElementById("statusText");
-  var syncProgress = document.getElementById("syncProgress");
-
-  function setStatus(text, syncing){
-    statusText.textContent = text;
-    statusDot.className = "dot" + (syncing ? " syncing" : "");
-  }
-
-  function syncAllDays(force){
-    var todo = ALL_DATES.filter(function(d){ return force || !dayIsFinalized(d); });
-    syncProgress.max = todo.length || 1;
-    syncProgress.value = 0;
-    syncProgress.style.display = todo.length ? "block" : "none";
-    setStatus("Sincronizando calendario (" + todo.length + " días)...", true);
-    var i = 0;
-    function next(){
-      if (i >= todo.length){
-        syncProgress.style.display = "none";
-        cache.lastFullSync = Date.now();
-        saveCache();
-        document.getElementById("lastFullSync").textContent = new Date().toLocaleTimeString("es");
-        setStatus("Actualizado · " + new Date().toLocaleTimeString("es"), false);
-        renderAll();
-        syncScorersBackground();
-        return;
-      }
-      var d = todo[i];
-      fetchDay(d).then(function(){
-        i++;
-        syncProgress.value = i;
-        if (i % 5 === 0) renderAll();
-        next();
-      });
-    }
-    next();
-  }
-
-  // ---------- Round labeling ----------
+  /* ---------- Etiquetas de fase / estado ---------- */
   function roundLabel(e){
-    if (e.strGroup) return "Fase de grupos · Jornada " + e.intRound + " · Grupo " + e.strGroup;
-    var r = String(e.intRound);
-    var map = { "32":"Ronda de 32 (dieciseisavos)", "16":"Octavos de final", "8":"Cuartos de final",
-                "4":"Semifinal", "2":"Final", "1":"Final" };
-    if (map[r]) return map[r];
-    if (/final/i.test(e.strEvent||"")) return "Final";
-    return "Fase eliminatoria";
+    if(e.strGroup) return "Grupos · J" + e.intRound + " · Grupo " + e.strGroup;
+    var m={ "32":"Dieciseisavos","16":"Octavos de final","8":"Cuartos de final","4":"Semifinal","3":"Tercer puesto","2":"Final","1":"Final" };
+    return m[String(e.intRound)] || (/final/i.test(e.strEvent||"")?"Final":"Fase eliminatoria");
   }
-  function roundSortKey(e){
-    if (e.strGroup) return 100 + Number(e.intRound || 0);
-    var order = {"32":200, "16":300, "8":400, "4":500, "3":550, "2":600, "1":600};
-    return order[String(e.intRound)] || 250;
-  }
-
   function statusInfo(e){
-    var s = e.strStatus;
-    if (FINISHED.indexOf(s) !== -1) return {label: s === "PEN" || s==="AP" ? "Final (penales)" : (s==="AET"?"Final (prórroga)":"Finalizado"), cls:"ft"};
-    if (s === "NS" || !s) return {label: (e.strTime||"").slice(0,5) || "Por jugar", cls:"ns"};
-    if (s === "PST") return {label:"Aplazado", cls:"ns"};
-    if (s === "CANC") return {label:"Cancelado", cls:"ns"};
-    return {label: s + "'", cls:"live"};
+    if(isFinished(e)){
+      var extra = (e.strStatus==="PEN"||e.strStatus==="AP") ? "Penales" : (e.strStatus==="AET" ? "Prórroga" : "Final");
+      return {txt:extra, cls:"ft"};
+    }
+    if(isLive(e)) return {txt:e.strStatus+"′", cls:"live", live:true};
+    if(e.strStatus==="PST") return {txt:"Aplazado", cls:"ns"};
+    if(e.strStatus==="CANC") return {txt:"Cancelado", cls:"ns"};
+    return {txt:(e.strTime||"").slice(0,5) || "Por jugar", cls:"ns"};
   }
 
-  // ---------- Rendering: Partidos ----------
-  var matchesContainer = document.getElementById("matchesContainer");
-  var searchTeam = document.getElementById("searchTeam");
-  var filterStatus = document.getElementById("filterStatus");
-  var filterGroup = document.getElementById("filterGroup");
+  /* ---------- KPIs ---------- */
+  function computeKPIs(events){
+    var played=0, goals=0, teams={};
+    events.forEach(function(e){
+      teams[e.strHomeTeam]=1; teams[e.strAwayTeam]=1;
+      if(isFinished(e) && e.intHomeScore!=null && e.intAwayScore!=null){
+        played++; goals += Number(e.intHomeScore)+Number(e.intAwayScore);
+      }
+    });
+    document.getElementById("kpiPlayed").textContent = played;
+    document.getElementById("kpiGoals").textContent = goals;
+    document.getElementById("kpiAvg").textContent = played ? (goals/played).toFixed(2).replace(".",",") : "—";
+    document.getElementById("kpiTeams").textContent = Object.keys(teams).length;
+  }
 
-  function populateGroupFilter(events){
-    var groups = {};
-    events.forEach(function(e){ if (e.strGroup) groups["Grupo " + e.strGroup] = true; });
-    var current = filterGroup.value;
-    var opts = ['<option value="all">Todas las fases</option>'];
-    Object.keys(groups).sort().forEach(function(g){ opts.push('<option value="'+g+'">'+g+'</option>'); });
-    opts.push('<option value="knockout">Fase eliminatoria</option>');
-    filterGroup.innerHTML = opts.join("");
-    filterGroup.value = current || "all";
+  /* ---------- Render: Partidos ---------- */
+  var elMatches=document.getElementById("matches");
+  var elQ=document.getElementById("q"), elEstado=document.getElementById("fEstado"), elFase=document.getElementById("fFase");
+
+  function fillFaseFilter(events){
+    var groups={}; events.forEach(function(e){ if(e.strGroup) groups[e.strGroup]=1; });
+    var cur=elFase.value;
+    var o=['<option value="all">Todas las fases</option>'];
+    Object.keys(groups).sort().forEach(function(g){ o.push('<option value="G'+g+'">Grupo '+g+'</option>'); });
+    o.push('<option value="ko">Fase eliminatoria</option>');
+    elFase.innerHTML=o.join(""); elFase.value=cur||"all";
   }
 
   function renderMatches(){
-    var events = allEvents().slice().sort(function(a,b){
-      var ka = a.dateEvent + (a.strTime||""), kb = b.dateEvent + (b.strTime||"");
-      return ka.localeCompare(kb);
+    var events=mergedEvents().sort(function(a,b){
+      return (a.dateEvent+(a.strTime||"")).localeCompare(b.dateEvent+(b.strTime||""));
     });
-    populateGroupFilter(events);
-
-    var term = searchTeam.value.trim().toLowerCase();
-    var statusF = filterStatus.value;
-    var groupF = filterGroup.value;
-
-    var filtered = events.filter(function(e){
-      if (term && !( (e.strHomeTeam||"").toLowerCase().indexOf(term) !== -1 ||
-                      (e.strAwayTeam||"").toLowerCase().indexOf(term) !== -1)) return false;
-      var fin = FINISHED.indexOf(e.strStatus) !== -1;
-      var live = !fin && e.strStatus && e.strStatus !== "NS" && e.strStatus !== "PST" && e.strStatus !== "CANC";
-      if (statusF === "played" && !fin) return false;
-      if (statusF === "upcoming" && (fin || live)) return false;
-      if (statusF === "live" && !live) return false;
-      if (groupF !== "all"){
-        if (groupF === "knockout" && e.strGroup) return false;
-        if (groupF !== "knockout" && ("Grupo " + e.strGroup) !== groupF) return false;
+    fillFaseFilter(events);
+    var term=elQ.value.trim().toLowerCase(), fe=elEstado.value, ff=elFase.value;
+    var list=events.filter(function(e){
+      if(term){
+        var hay=(T(e.strHomeTeam)+" "+T(e.strAwayTeam)+" "+e.strHomeTeam+" "+e.strAwayTeam).toLowerCase();
+        if(hay.indexOf(term)===-1) return false;
+      }
+      var fin=isFinished(e), lv=isLive(e);
+      if(fe==="played"&&!fin) return false;
+      if(fe==="upcoming"&&(fin||lv)) return false;
+      if(fe==="live"&&!lv) return false;
+      if(ff!=="all"){
+        if(ff==="ko"&&e.strGroup) return false;
+        if(ff!=="ko"&&("G"+e.strGroup)!==ff) return false;
       }
       return true;
     });
-
-    if (!filtered.length){
-      matchesContainer.innerHTML = events.length
-        ? '<div class="empty">No hay partidos que coincidan con el filtro.</div>'
-        : '<div class="empty">Todavía no se han podido cargar datos. Comprueba tu conexión — la app reintentará automáticamente.</div>';
+    if(!list.length){
+      elMatches.innerHTML='<div class="empty">'+(events.length?"No hay partidos que coincidan con el filtro.":"Aún no se han podido cargar datos. La app reintentará automáticamente.")+'</div>';
       return;
     }
-
-    var byDate = {};
-    var order = [];
-    filtered.forEach(function(e){
-      if (!byDate[e.dateEvent]){ byDate[e.dateEvent] = []; order.push(e.dateEvent); }
-      byDate[e.dateEvent].push(e);
+    var byDate={}, order=[];
+    list.forEach(function(e){ if(!byDate[e.dateEvent]){byDate[e.dateEvent]=[];order.push(e.dateEvent);} byDate[e.dateEvent].push(e); });
+    var html="";
+    order.forEach(function(d){
+      var lbl=new Date(d+"T12:00:00Z").toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"});
+      html+='<div class="day-group"><div class="day-title">'+lbl+'</div>';
+      byDate[d].forEach(function(e){ html+=matchCard(e); });
+      html+='</div>';
     });
-
-    var html = "";
-    order.forEach(function(date){
-      var dObj = new Date(date + "T12:00:00Z");
-      var label = dObj.toLocaleDateString("es", {weekday:"long", day:"numeric", month:"long", year:"numeric"});
-      html += '<div class="day-group"><div class="day-title">' + label + '</div>';
-      byDate[date].forEach(function(e){ html += matchCardHTML(e); });
-      html += '</div>';
-    });
-    matchesContainer.innerHTML = html;
-
-    matchesContainer.querySelectorAll(".match").forEach(function(el){
-      el.addEventListener("click", function(){ toggleTimeline(el, el.dataset.id); });
+    elMatches.innerHTML=html;
+    Array.prototype.forEach.call(elMatches.querySelectorAll(".match"),function(el){
+      el.addEventListener("click",function(){ toggleTL(el.dataset.id); });
+      el.addEventListener("keydown",function(ev){ if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();toggleTL(el.dataset.id);} });
     });
   }
 
-  function matchCardHTML(e){
-    var st = statusInfo(e);
-    var hs = e.intHomeScore != null ? e.intHomeScore : "-";
-    var as = e.intAwayScore != null ? e.intAwayScore : "-";
-    var score = (e.intHomeScore == null && e.intAwayScore == null) ? "vs" : (hs + " - " + as);
-    return '' +
-    '<div class="match" data-id="' + e.idEvent + '">' +
-      '<div class="match-top">' +
-        '<span>' + roundLabel(e) + '</span>' +
-        '<span class="badge-status ' + st.cls + '">' + st.label + '</span>' +
-      '</div>' +
-      '<div class="teams">' +
-        '<div class="team home">' + teamImg(e.strHomeTeamBadge) + '<span>' + e.strHomeTeam + '</span></div>' +
-        '<div class="score">' + score + '</div>' +
-        '<div class="team away">' + teamImg(e.strAwayTeamBadge) + '<span>' + e.strAwayTeam + '</span></div>' +
-      '</div>' +
-      '<div class="venue-line">' + (e.strVenue ? e.strVenue + (e.strCity ? " · " + e.strCity : "") : "") + '</div>' +
-      '<div class="timeline" id="tl-' + e.idEvent + '"></div>' +
-    '</div>';
+  function scoreBlock(e){
+    if(e.intHomeScore==null && e.intAwayScore==null) return '<span class="vs">VS</span>';
+    var main=e.intHomeScore+" - "+e.intAwayScore, pens="";
+    if((e.strStatus==="PEN"||e.strStatus==="AP") && e.intHomeScoreExtra!=null && e.intAwayScoreExtra!=null)
+      pens='<span class="pens">pen. '+e.intHomeScoreExtra+"-"+e.intAwayScoreExtra+'</span>';
+    return main+pens;
   }
-  function teamImg(url){
-    return '<img loading="lazy" src="' + (url||"") + '" onerror="this.style.visibility=\'hidden\'" alt="">';
+  function matchCard(e){
+    var st=statusInfo(e);
+    var pill = st.live ? '<span class="pill live"><span class="live-dot"></span>'+st.txt+'</span>'
+                       : '<span class="pill '+st.cls+'">'+st.txt+'</span>';
+    return '<div class="match'+(st.live?' live':'')+'" data-id="'+e.idEvent+'" tabindex="0" role="button" aria-expanded="false">'+
+      '<div class="match-top"><span class="round-tag">'+roundLabel(e)+'</span>'+pill+'</div>'+
+      '<div class="teams">'+
+        '<div class="team"><span class="flag">'+flag(e.strHomeTeam)+'</span><span class="tname">'+T(e.strHomeTeam)+'</span></div>'+
+        '<div class="score">'+scoreBlock(e)+'</div>'+
+        '<div class="team away"><span class="flag">'+flag(e.strAwayTeam)+'</span><span class="tname">'+T(e.strAwayTeam)+'</span></div>'+
+      '</div>'+
+      '<div class="venue">📍 '+((e.strVenue||"Sede por confirmar"))+(e.strCity?' · '+e.strCity:'')+'<span class="expand-hint">▾ detalle</span></div>'+
+      '<div class="timeline" id="tl-'+e.idEvent+'"></div></div>';
   }
 
-  function toggleTimeline(matchEl, eventId){
-    var tl = document.getElementById("tl-" + eventId);
-    var isOpen = tl.classList.contains("open");
-    if (isOpen){ tl.classList.remove("open"); return; }
-    tl.classList.add("open");
-    if (cache.timelines[eventId]){
-      tl.innerHTML = timelineHTML(cache.timelines[eventId]);
-      return;
-    }
-    tl.innerHTML = '<div class="tl-loading">Cargando detalle del partido...</div>';
-    enqueue(BASE + "/lookuptimeline.php?id=" + eventId).then(function(data){
-      var items = (data && data.timeline) || [];
-      cache.timelines[eventId] = items;
-      saveCache();
-      tl.innerHTML = timelineHTML(items);
+  function toggleTL(id){
+    var tl=document.getElementById("tl-"+id);
+    var card=tl.closest(".match");
+    if(tl.classList.contains("open")){ tl.classList.remove("open"); card.setAttribute("aria-expanded","false"); return; }
+    tl.classList.add("open"); card.setAttribute("aria-expanded","true");
+    var data=getTimeline(id);
+    if(data){ tl.innerHTML=timelineHTML(data); return; }
+    tl.innerHTML='<div class="tl-empty">Cargando detalle…</div>';
+    enqueue(BASE+"/lookuptimeline.php?id="+id).then(function(d){
+      var items=(d&&d.timeline)||[];
+      cache.timelines[id]=items; save();
+      tl.innerHTML=timelineHTML(items);
     });
   }
-
   function timelineHTML(items){
-    if (!items.length) return '<div class="tl-loading">Sin detalle disponible para este partido.</div>';
-    var iconFor = { "Goal":"⚽", "Card":"🟨", "subst":"🔁" };
-    var sorted = items.slice().sort(function(a,b){ return Number(a.intTime) - Number(b.intTime); });
+    if(!items||!items.length) return '<div class="tl-empty">Sin detalle disponible para este partido.</div>';
+    var sorted=items.slice().sort(function(a,b){return (Number(a.intTime)||0)-(Number(b.intTime)||0);});
     return sorted.map(function(t){
-      var icon = iconFor[t.strTimeline] || "•";
-      if (t.strTimeline === "Card" && t.strTimelineDetail === "Red Card") icon = "🟥";
-      var text = t.strPlayer || "";
-      if (t.strTimeline === "Goal"){
-        text += t.strTimelineDetail && /penalty/i.test(t.strTimelineDetail) ? " (penal)" : "";
-        text += t.strTimelineDetail && /own/i.test(t.strTimelineDetail) ? " (en propia puerta)" : "";
-        if (t.strAssist) text += " — asist. " + t.strAssist;
-      } else if (t.strTimeline === "subst"){
-        text = (t.strAssist || "") + " ⟶ " + text;
-      }
-      return '<div class="tl-row"><span class="tl-min">' + (t.intTime||"") + "'</span>" +
-             '<span class="tl-icon">' + icon + '</span>' +
-             '<span>' + text + ' <span style="color:var(--muted)">(' + t.strTeam + ')</span></span></div>';
+      var ico="•", txt="";
+      if(t.strTimeline==="Goal"){
+        ico="⚽";
+        var extra="";
+        if(t.strTimelineDetail){ if(/penalty/i.test(t.strTimelineDetail)) extra=" (penal)"; else if(/own/i.test(t.strTimelineDetail)) extra=" (p.p.)"; }
+        txt='<span class="who">'+(t.strPlayer||"")+'</span>'+extra+(t.strAssist?'<span class="meta"> · asist. '+t.strAssist+'</span>':'');
+      } else if(t.strTimeline==="Card"){
+        ico=/red/i.test(t.strTimelineDetail||"")?"🟥":"🟨";
+        txt='<span class="who">'+(t.strPlayer||"")+'</span>';
+      } else if(t.strTimeline==="subst"){
+        ico="🔁"; txt='<span class="meta">'+(t.strAssist||"?")+' → </span><span class="who">'+(t.strPlayer||"")+'</span>';
+      } else { txt='<span class="who">'+(t.strPlayer||t.strTimeline)+'</span>'; }
+      var team=t.strTeam?'<span class="meta"> ('+T(t.strTeam)+')</span>':'';
+      return '<div class="tl-row"><span class="tl-min">'+(t.intTime||"")+"′</span><span class=\"tl-ico\">"+ico+'</span><span class="tl-txt">'+txt+team+'</span></div>';
     }).join("");
   }
 
-  // ---------- Rendering: Standings (computed from group-stage results) ----------
-  function renderStandings(){
-    var events = allEvents().filter(function(e){ return e.strGroup; });
-    var groups = {};
+  /* ---------- Render: Grupos ---------- */
+  function renderGroups(){
+    var events=mergedEvents().filter(function(e){return e.strGroup;});
+    var G={};
     events.forEach(function(e){
-      var g = e.strGroup;
-      if (!groups[g]) groups[g] = { teams: {}, };
-      ensureTeam(groups[g], e.idHomeTeam, e.strHomeTeam, e.strHomeTeamBadge);
-      ensureTeam(groups[g], e.idAwayTeam, e.strAwayTeam, e.strAwayTeamBadge);
-      if (FINISHED.indexOf(e.strStatus) !== -1 && e.intHomeScore != null && e.intAwayScore != null){
-        applyResult(groups[g].teams[e.idHomeTeam], groups[g].teams[e.idAwayTeam],
-                    Number(e.intHomeScore), Number(e.intAwayScore));
+      var g=e.strGroup; if(!G[g]) G[g]={};
+      addTeam(G[g],e.strHomeTeam); addTeam(G[g],e.strAwayTeam);
+      if(isFinished(e)&&e.intHomeScore!=null&&e.intAwayScore!=null)
+        applyRes(G[g][e.strHomeTeam],G[g][e.strAwayTeam],+e.intHomeScore,+e.intAwayScore);
+    });
+    var el=document.getElementById("groups");
+    var keys=Object.keys(G).sort();
+    if(!keys.length){ el.innerHTML='<div class="empty">Aún no hay datos de la fase de grupos.</div>'; return; }
+    var html='<div class="groups-grid">';
+    keys.forEach(function(g){
+      var rows=Object.keys(G[g]).map(function(k){return G[g][k];}).sort(function(a,b){
+        return b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || T(a.name).localeCompare(T(b.name));
+      });
+      html+='<div class="group-card"><h3>Grupo '+g+'</h3><div class="tbl-scroll"><table class="standings">'+
+        '<thead><tr><th class="left">#</th><th class="left">Selección</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th><th>Forma</th></tr></thead><tbody>';
+      rows.forEach(function(t,i){
+        html+='<tr class="'+(i<2?"qual":"")+'">'+
+          '<td class="left"><span class="pos">'+(i+1)+'</span></td>'+
+          '<td class="left"><span class="tteam"><span class="flag">'+flag(t.name)+'</span><span class="tn">'+T(t.name)+'</span></span></td>'+
+          '<td>'+t.pj+'</td><td>'+t.w+'</td><td>'+t.d+'</td><td>'+t.l+'</td><td>'+t.gf+'</td><td>'+t.ga+'</td>'+
+          '<td>'+(t.gd>0?"+":"")+t.gd+'</td><td class="pts">'+t.pts+'</td>'+
+          '<td><span class="form">'+t.form.slice(-4).map(function(r){return '<span class="fdot '+r+'">'+({W:"G",D:"E",L:"P"}[r])+'</span>';}).join("")+'</span></td></tr>';
+      });
+      html+='</tbody></table></div>'+
+        '<div class="qual-note"><span class="qual-swatch"></span> Puestos de clasificación (2 primeros)</div></div>';
+    });
+    html+='</div><div class="section-note" style="margin-top:14px;"><span>ℹ️</span><span>Clasificación calculada con los resultados disponibles. Los desempates se aplican de forma simplificada (puntos, diferencia de goles, goles a favor); no incluye el enfrentamiento directo oficial.</span></div>';
+    el.innerHTML=html;
+  }
+  function addTeam(g,name){ if(!g[name]) g[name]={name:name,pj:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0,form:[]}; }
+  function applyRes(h,a,hs,as){
+    h.pj++;a.pj++; h.gf+=hs;h.ga+=as;a.gf+=as;a.ga+=hs; h.gd=h.gf-h.ga;a.gd=a.gf-a.ga;
+    if(hs>as){h.w++;h.pts+=3;a.l++;h.form.push("W");a.form.push("L");}
+    else if(hs<as){a.w++;a.pts+=3;h.l++;a.form.push("W");h.form.push("L");}
+    else{h.d++;a.d++;h.pts++;a.pts++;h.form.push("D");a.form.push("D");}
+  }
+
+  /* ---------- Render: Goleadores / Asistentes ---------- */
+  function aggregate(kind){
+    // kind: 'goal' -> por autor ; 'assist' -> por asistente
+    var map={}, ids={};
+    mergedEvents().forEach(function(e){ ids[e.idEvent]=1; });
+    Object.keys(ids).forEach(function(id){
+      var tl=getTimeline(id); if(!tl) return;
+      tl.forEach(function(t){
+        if(t.strTimeline!=="Goal") return;
+        if(t.strTimelineDetail && /missed|penalty missed/i.test(t.strTimelineDetail)) return;
+        var name, team=t.strTeam;
+        if(kind==="goal"){ name=t.strPlayer; }
+        else { name=t.strAssist; if(!name) return; }
+        if(!name) return;
+        var key=name+"|"+team;
+        if(!map[key]) map[key]={name:name,team:team,n:0};
+        map[key].n++;
+      });
+    });
+    return Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return b.n-a.n || a.name.localeCompare(b.name);});
+  }
+  function renderBoard(elId, kind){
+    var list=aggregate(kind);
+    var el=document.getElementById(elId);
+    if(!list.length){ el.innerHTML='<div class="empty">Aún no hay datos suficientes. Se están cargando los detalles de los partidos…</div>'; return; }
+    var max=list[0].n;
+    var lbl = kind==="goal" ? "goles" : "asist.";
+    el.innerHTML='<div class="board">'+list.slice(0,40).map(function(s,i){
+      var top = i===0?"top1":i===1?"top2":i===2?"top3":"";
+      var w=Math.round(100*s.n/max);
+      return '<div class="lb-row '+(kind==="assist"?"assist ":"")+top+'">'+
+        '<div class="lb-bar" style="width:'+w+'%"></div>'+
+        '<div class="lb-rank">'+(i+1)+'</div>'+
+        '<div class="lb-flag">'+flag(s.team)+'</div>'+
+        '<div class="lb-main"><div class="lb-name">'+s.name+'</div><div class="lb-team">'+T(s.team)+'</div></div>'+
+        '<div class="lb-count">'+s.n+' <small>'+lbl+'</small></div></div>';
+    }).join("")+'</div>';
+  }
+
+  /* ---------- Orquestación ---------- */
+  function renderAll(){
+    var ev=mergedEvents();
+    computeKPIs(ev);
+    renderMatches();
+    renderGroups();
+    renderBoard("scorers","goal");
+    renderBoard("assists","assist");
+  }
+
+  /* ---------- Sincronización en vivo ---------- */
+  var syncDot=document.getElementById("syncDot"), syncText=document.getElementById("syncText"), progBar=document.getElementById("progBar");
+  function setSync(txt,busy){ syncText.textContent=txt; syncDot.className="sync-dot"+(busy?" busy":""); }
+
+  function dayFinalizedInData(d){
+    // ¿Todos los partidos de ese día (en seed o cache) están finalizados?
+    var evs=mergedEvents().filter(function(e){return e.dateEvent===d;});
+    if(!evs.length) return false;
+    return evs.every(isFinished);
+  }
+
+  var syncing=false;
+  function syncLive(force){
+    if(syncing) return; syncing=true;
+    // Solo refrescamos días no finalizados (para captar próximos partidos y marcadores en vivo)
+    var todo=DATES.filter(function(d){ return force || !dayFinalizedInData(d); });
+    var i=0, total=todo.length;
+    setSync("Actualizando…", true);
+    progBar.style.width="0%";
+    (function next(){
+      if(i>=total){
+        progBar.style.width="100%"; setTimeout(function(){progBar.style.width="0%";},400);
+        cache.lastSync=Date.now(); save();
+        document.getElementById("lastSync").textContent=new Date().toLocaleTimeString("es-ES");
+        setSync("Al día · "+new Date().toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}), false);
+        syncing=false; renderAll(); syncTimelines();
+        return;
       }
-    });
-
-    var container = document.getElementById("standingsContainer");
-    var groupKeys = Object.keys(groups).sort();
-    if (!groupKeys.length){
-      container.innerHTML = '<div class="empty">Aún no hay datos de fase de grupos disponibles.</div>';
-      return;
-    }
-    var html = "";
-    groupKeys.forEach(function(g){
-      var rows = Object.values(groups[g].teams).sort(function(a,b){
-        return b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.name.localeCompare(b.name);
-      });
-      html += '<div class="group-card"><h3>Grupo ' + g + '</h3><table class="standings">' +
-        '<thead><tr><th>Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>';
-      rows.forEach(function(t, idx){
-        html += '<tr class="' + (idx===1 ? "qual-line":"") + '"><td class="team-cell">' + teamImg(t.badge) +
-          '<span>' + t.name + '</span></td><td>' + t.pj + '</td><td>' + t.w + '</td><td>' + t.d + '</td><td>' + t.l +
-          '</td><td>' + t.gf + '</td><td>' + t.ga + '</td><td>' + (t.gd>0?"+":"") + t.gd + '</td><td><b>' + t.pts + '</b></td></tr>';
-      });
-      html += '</tbody></table></div>';
-    });
-    html += '<div class="sub" style="text-align:center;margin-top:6px;">Clasificación calculada a partir de los resultados disponibles. Desempates simplificados (Pts, DG, GF); no incluye head-to-head oficial.</div>';
-    container.innerHTML = html;
-  }
-  function ensureTeam(group, id, name, badge){
-    if (!group.teams[id]) group.teams[id] = { id:id, name:name, badge:badge, pj:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0 };
-  }
-  function applyResult(home, away, hs, as){
-    home.pj++; away.pj++;
-    home.gf += hs; home.ga += as; away.gf += as; away.ga += hs;
-    home.gd = home.gf - home.ga; away.gd = away.gf - away.ga;
-    if (hs > as){ home.w++; home.pts += 3; away.l++; }
-    else if (hs < as){ away.w++; away.pts += 3; home.l++; }
-    else { home.d++; away.d++; home.pts++; away.pts++; }
-  }
-
-  // ---------- Rendering: Goleadores ----------
-  function renderScorers(){
-    var goals = {};
-    Object.keys(cache.timelines).forEach(function(eventId){
-      (cache.timelines[eventId] || []).forEach(function(t){
-        if (t.strTimeline !== "Goal") return;
-        if (t.strTimelineDetail && /missed/i.test(t.strTimelineDetail)) return;
-        var key = t.strPlayer + "|" + t.strTeam;
-        if (!goals[key]) goals[key] = { player:t.strPlayer, team:t.strTeam, goals:0 };
-        goals[key].goals++;
-      });
-    });
-    var list = Object.values(goals).sort(function(a,b){ return b.goals - a.goals || a.player.localeCompare(b.player); });
-    var container = document.getElementById("scorersContainer");
-    if (!list.length){
-      container.innerHTML = '<div class="empty">Aún no hay goleadores cargados. Se están sincronizando los detalles de los partidos finalizados en segundo plano...</div>';
-      return;
-    }
-    container.innerHTML = '<div class="scorers-list">' + list.map(function(s, i){
-      return '<div class="scorer-row"><span class="scorer-rank">' + (i+1) + '</span>' +
-        '<span class="scorer-name">' + s.player + ' <span class="scorer-team">· ' + s.team + '</span></span>' +
-        '<span class="scorer-goals">' + s.goals + '</span></div>';
-    }).join("") + '</div>';
-  }
-
-  var scorersQueueRunning = false;
-  function syncScorersBackground(){
-    if (scorersQueueRunning) return;
-    scorersQueueRunning = true;
-    var finished = allEvents().filter(function(e){ return FINISHED.indexOf(e.strStatus) !== -1; });
-    var todo = finished.filter(function(e){ return !cache.timelines[e.idEvent]; });
-    var total = todo.length, done = 0;
-    var prog = document.getElementById("scorersProgress");
-    function updateProg(){
-      prog.textContent = total ? ("Sincronizando goleadores: " + done + "/" + total) : "";
-    }
-    updateProg();
-    function next(){
-      if (!todo.length){ scorersQueueRunning = false; prog.textContent = ""; renderScorers(); return; }
-      var e = todo.shift();
-      enqueue(BASE + "/lookuptimeline.php?id=" + e.idEvent).then(function(data){
-        cache.timelines[e.idEvent] = (data && data.timeline) || [];
-        saveCache();
-        done++;
-        updateProg();
-        if (done % 4 === 0) renderScorers();
+      var d=todo[i];
+      enqueue(BASE+"/eventsday.php?l="+LEAGUE+"&d="+d).then(function(data){
+        if(data){ cache.days[d]={events:(data.events||[]),at:Date.now()}; save(); }
+        i++; progBar.style.width=Math.round(100*i/total)+"%";
+        if(i%4===0) renderAll();
         next();
       });
-    }
-    next();
+    })();
   }
 
-  // ---------- Tabs ----------
-  document.querySelectorAll("nav.tabs button").forEach(function(btn){
-    btn.addEventListener("click", function(){
-      document.querySelectorAll("nav.tabs button").forEach(function(b){ b.classList.remove("active"); });
-      btn.classList.add("active");
-      ["partidos","tabla","goleadores"].forEach(function(t){
-        document.getElementById("tab-" + t).style.display = (t === btn.dataset.tab) ? "block" : "none";
+  // Descarga en segundo plano los detalles de partidos finalizados que aún no tengamos
+  var tlSyncing=false;
+  function syncTimelines(){
+    if(tlSyncing) return; tlSyncing=true;
+    var todo=mergedEvents().filter(function(e){ return isFinished(e) && !cache.timelines[e.idEvent] && !(SEED.timelines&&SEED.timelines[e.idEvent]); });
+    var i=0;
+    (function next(){
+      if(i>=todo.length){ tlSyncing=false; renderBoard("scorers","goal"); renderBoard("assists","assist"); return; }
+      var e=todo[i];
+      enqueue(BASE+"/lookuptimeline.php?id="+e.idEvent).then(function(d){
+        cache.timelines[e.idEvent]=(d&&d.timeline)||[]; save();
+        i++;
+        if(i%5===0){ renderBoard("scorers","goal"); renderBoard("assists","assist"); }
+        next();
       });
-      renderAll();
-    });
+    })();
+  }
+
+  /* ---------- Pestañas ---------- */
+  var TABS=["partidos","grupos","goleadores","asistentes"];
+  document.getElementById("tabs").addEventListener("click",function(ev){
+    var b=ev.target.closest("button"); if(!b) return;
+    Array.prototype.forEach.call(this.querySelectorAll("button"),function(x){x.classList.toggle("active",x===b);});
+    TABS.forEach(function(t){ document.getElementById("tab-"+t).hidden = (t!==b.dataset.tab); });
   });
 
-  function renderAll(){
-    renderMatches();
-    renderStandings();
-    renderScorers();
-  }
+  elQ.addEventListener("input",renderMatches);
+  elEstado.addEventListener("change",renderMatches);
+  elFase.addEventListener("change",renderMatches);
+  document.getElementById("btnRefresh").addEventListener("click",function(){ syncLive(true); });
 
-  searchTeam.addEventListener("input", renderMatches);
-  filterStatus.addEventListener("change", renderMatches);
-  filterGroup.addEventListener("change", renderMatches);
-  document.getElementById("btnRefresh").addEventListener("click", function(){ syncAllDays(false); });
-
-  document.getElementById("refreshSecs").textContent = Math.round(REFRESH_INTERVAL_MS/1000);
-
-  var autoToggle = document.getElementById("autoToggle");
-  var timer = null;
-  function scheduleAuto(){
-    if (timer) clearInterval(timer);
-    timer = setInterval(function(){
-      if (autoToggle.checked) syncAllDays(false);
-    }, REFRESH_INTERVAL_MS);
-  }
-  scheduleAuto();
-
-  // ---------- Boot ----------
+  /* ---------- Arranque ---------- */
   renderAll();
-  if (cache.lastFullSync){
-    document.getElementById("lastFullSync").textContent = new Date(cache.lastFullSync).toLocaleTimeString("es");
-  }
-  syncAllDays(false);
+  if(cache.lastSync) document.getElementById("lastSync").textContent=new Date(cache.lastSync).toLocaleTimeString("es-ES");
+  setSync("Instantánea cargada", false);
+  syncLive(false);
+  setInterval(function(){ syncLive(false); }, REFRESH_MS);
 
 })();
 </script>
