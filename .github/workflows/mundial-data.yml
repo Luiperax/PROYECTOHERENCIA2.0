@@ -1,0 +1,41 @@
+name: Actualizar datos Mundial 2026
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # cada 15 minutos (GitHub puede retrasarlo algo)
+  workflow_dispatch:          # permite lanzarlo a mano desde la pestaña Actions
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mundial-data
+  cancel-in-progress: false
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Obtener datos de la FIFA
+        run: python3 MundialTracker2026/scripts/fetch_data.py
+
+      - name: Publicar cambios si los hay
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain MundialTracker2026/data.json)" ]; then
+            git add MundialTracker2026/data.json
+            git commit -m "Actualizar datos del Mundial 2026 [skip ci]"
+            git push
+            echo "Datos actualizados y publicados."
+          else
+            echo "Sin cambios en los datos."
+          fi
