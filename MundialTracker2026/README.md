@@ -16,9 +16,20 @@ navegador (o al pulsar el botón ↻).
 - **Grupos**: los 12 grupos con su clasificación (PJ, G, E, P, GF, GC, DG, Pts), racha de forma y
   puestos de clasificación resaltados.
 - **Goleadores** y **Asistentes**: rankings con barra proporcional y podio (oro/plata/bronce).
+- **Pronóstico** en los partidos por jugar: probabilidad de que cada selección gane/avance, con un
+  modelo estadístico (Poisson de ataque/defensa) calculado a partir de los resultados del torneo.
 - **Instantánea incorporada**: la app trae datos reales precargados, así se ve poblada al instante y
-  funciona aunque no haya red; cuando hay conexión, se actualiza en directo por encima de esa base.
+  funciona aunque no haya red; cuando hay conexión, se actualiza por encima de esa base.
 - **Tema oscuro por defecto** con botón para cambiar a claro (la preferencia se recuerda).
+
+## Actualización automática (importante)
+
+Para que los datos se actualicen **en cualquier navegador** —incluidos los que bloquean peticiones
+entre sitios, como Brave con sus escudos—, la actualización **no depende del navegador**: una tarea
+programada de GitHub Actions (`.github/workflows/mundial-data.yml`) ejecuta `scripts/fetch_data.py`
+cada ~15 minutos, descarga los datos de la FIFA y guarda `data.json` en el propio repositorio. La web
+lee ese `data.json` **desde su mismo origen** (nunca bloqueado) y, como respaldo, intenta también la
+API de la FIFA en directo, y por último la instantánea incorporada.
 
 ### Sobre el "mejor jugador del partido"
 
