@@ -1,0 +1,41 @@
+name: Actualizar datos de fútbol
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # cada 30 minutos (GitHub puede retrasarlo algo)
+  workflow_dispatch:          # permite lanzarlo a mano desde la pestaña Actions
+
+permissions:
+  contents: write
+
+concurrency:
+  group: futbol-data
+  cancel-in-progress: false
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Obtener datos de LaLiga, Copa del Rey y Champions
+        run: python3 Futbol/scripts/fetch_futbol.py
+
+      - name: Publicar cambios si los hay
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain Futbol/data.json)" ]; then
+            git add Futbol/data.json
+            git commit -m "Actualizar datos de fútbol [skip ci]"
+            git push
+            echo "Datos actualizados y publicados."
+          else
+            echo "Sin cambios en los datos."
+          fi
