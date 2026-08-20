@@ -43,6 +43,20 @@ oficial, se puede sustituir sin tocar el resto de la app.
 
 Esa limitación se indica dentro de la propia página, para que no se confunda un dato parcial con uno completo.
 
+## Temporadas: se eligen solas
+
+Ninguna temporada está fijada en el código. En cada ejecución el recolector calcula la temporada
+europea en curso (arranca en julio) y comprueba si la fuente ya publica partidos:
+
+- Si los hay, usa esa temporada.
+- Si todavía no ha empezado —el caso típico de la **Copa del Rey**, que arranca a finales de octubre—,
+  muestra la **última edición disputada** y la etiqueta como tal, tanto en la pestaña de la competición
+  como en un aviso dentro de la página.
+
+En cuanto la nueva edición publica su primer partido, la app cambia a ella automáticamente, sin tocar
+el código. Al detectar el cambio de temporada, el recolector descarta la caché anterior para no mezclar
+ediciones.
+
 ## Actualización automática
 
 Los datos **no se descargan desde el navegador** (eso falla en navegadores que bloquean peticiones entre

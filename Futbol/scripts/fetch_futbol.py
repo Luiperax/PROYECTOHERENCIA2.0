@@ -41,6 +41,38 @@ def get(url, tries=5):
     return None
 
 
+def season_label(d, offset=0):
+    """Temporada estilo '2026-2027' para una fecha dada. La temporada europea
+    arranca en julio, así que enero-junio pertenece a la temporada que empezó el año anterior."""
+    y = d.year if d.month >= 7 else d.year - 1
+    y += offset
+    return f"{y}-{y + 1}"
+
+
+def tsdb_season_has_matches(league_id, season):
+    r = get(f"{TSDB}/eventsseason.php?id={league_id}&s={season}")
+    return bool((r or {}).get("events"))
+
+
+def pick_tsdb_season(league_id, today):
+    """Elige la temporada más reciente que ya tenga partidos publicados.
+    Así, cuando arranque una edición nueva, la app pasa a ella sola.
+    Devuelve (temporada, en_curso)."""
+    current = season_label(today)
+    if tsdb_season_has_matches(league_id, current):
+        return current, True
+    previous = season_label(today, -1)
+    if tsdb_season_has_matches(league_id, previous):
+        return previous, False
+    return current, True
+
+
+def season_bounds(season):
+    """Rango de fechas a recorrer para una temporada '2026-2027'."""
+    start_year = int(season.split("-")[0])
+    return date(start_year, 7, 1), date(start_year + 1, 6, 30)
+
+
 def load_prev():
     try:
         with open(OUT, encoding="utf-8") as f:
@@ -298,46 +330,50 @@ def main():
     today = date.today()
     comps = []
 
-    # ---- LaLiga ----
-    lp = prev_comps.get("laliga", {})
-    start = date(2026, 8, 1)
-    end = min(today + timedelta(days=45), date(2027, 6, 15))
-    m, days = fetch_tsdb_league("4335", start, end, lp)
-    for x in m.values():
-        x["rdn"] = round_name(x.get("rd"), False)
-    tl, st = fetch_tsdb_details(m, lp)
-    g, a = aggregate_from_timelines(tl)
-    comps.append({"id": "laliga", "name": "LaLiga", "season": "2026-2027", "emoji": "🇪🇸",
-                  "matches": sorted(m.values(), key=lambda x: (x["dt"] or "", x["time"] or "")),
-                  "timelines": tl, "stats": st, "scorers": g, "assists": a,
-                  "partial": True, "_days_done": days})
-    print(f"LaLiga: {len(m)} partidos, {len(tl)} con detalle", file=sys.stderr)
+    # ---- LaLiga y Copa del Rey (TheSportsDB) ----
+    for cid, name, league_id, emoji, is_cup, cap in [
+        ("laliga", "LaLiga", "4335", "🇪🇸", False, 60),
+        ("copa", "Copa del Rey", "4483", "🏆", True, 40),
+    ]:
+        prev = prev_comps.get(cid, {})
+        season, ongoing = pick_tsdb_season(league_id, today)
+        s_start, s_end = season_bounds(season)
+        # de una temporada en curso solo interesa hasta mes y medio vista
+        end = min(s_end, today + timedelta(days=45)) if ongoing else s_end
+        # si cambia la temporada respecto a la anterior, no reutilizamos nada
+        if prev.get("season") and prev.get("season") != season:
+            prev = {}
+        ms, days = fetch_tsdb_league(league_id, s_start, end, prev)
+        for x in ms.values():
+            x["rdn"] = round_name(x.get("rd"), is_cup)
+        tls, sts = fetch_tsdb_details(ms, prev, limit_new=cap)
+        g, a = aggregate_from_timelines(tls)
+        comps.append({"id": cid, "name": name, "season": season, "emoji": emoji,
+                      "ongoing": ongoing,
+                      "matches": sorted(ms.values(), key=lambda x: (x["dt"] or "", x["time"] or "")),
+                      "timelines": tls, "stats": sts, "scorers": g, "assists": a,
+                      "partial": True, "_days_done": days})
+        print(f"{name} [{season}{'' if ongoing else ', última edición disputada'}]: "
+              f"{len(ms)} partidos, {len(tls)} con detalle", file=sys.stderr)
 
-    # ---- Copa del Rey ----
-    cp = prev_comps.get("copa", {})
-    m2, days2 = fetch_tsdb_league("4483", date(2025, 9, 1), date(2026, 5, 1), cp)
-    for x in m2.values():
-        x["rdn"] = round_name(x.get("rd"), True)
-    tl2, st2 = fetch_tsdb_details(m2, cp, limit_new=40)
-    g2, a2 = aggregate_from_timelines(tl2)
-    comps.append({"id": "copa", "name": "Copa del Rey", "season": "2025-2026", "emoji": "🏆",
-                  "matches": sorted(m2.values(), key=lambda x: (x["dt"] or "", x["time"] or "")),
-                  "timelines": tl2, "stats": st2, "scorers": g2, "assists": a2,
-                  "partial": True, "_days_done": days2})
-    print(f"Copa del Rey: {len(m2)} partidos, {len(tl2)} con detalle", file=sys.stderr)
-
-    # ---- Champions League ----
+    # ---- Champions League (UEFA) ----
     up = prev_comps.get("ucl", {})
-    u = fetch_ucl(2027, up)
-    if u:
-        comps.append({"id": "ucl", "name": "Champions League", "season": "2026-2027", "emoji": "⭐",
+    ucl_season = season_label(today)
+    season_year = int(ucl_season.split("-")[1])  # la UEFA nombra la temporada por su año final
+    if up.get("season") and up.get("season") != ucl_season:
+        up = {}
+    u = fetch_ucl(season_year, up)
+    if u and u["matches"]:
+        comps.append({"id": "ucl", "name": "Champions League", "season": ucl_season, "emoji": "⭐",
+                      "ongoing": True,
                       "matches": sorted(u["matches"].values(), key=lambda x: (x["dt"] or "", x["time"] or "")),
                       "timelines": u["timelines"], "stats": u["stats"],
                       "scorers": u["scorers"], "assists": u["assists"],
                       "partial": False, "_pid_name": u["_pid_name"]})
-        print(f"Champions: {len(u['matches'])} partidos, {len(u['timelines'])} con detalle", file=sys.stderr)
-    elif up:
-        comps.append(up)
+        print(f"Champions [{ucl_season}]: {len(u['matches'])} partidos, "
+              f"{len(u['timelines'])} con detalle", file=sys.stderr)
+    elif prev_comps.get("ucl"):
+        comps.append(prev_comps["ucl"])
 
     data = {"competitions": comps, "updated": int(time.time())}
     with open(OUT, "w", encoding="utf-8") as f:
