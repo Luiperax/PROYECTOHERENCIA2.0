@@ -229,6 +229,26 @@ def _minute(txt):
     return total + (int(cur) if cur else 0)
 
 
+def fetch_prior_results(cfg, season):
+    """Resultados de la temporada anterior, solo marcadores (sin resúmenes).
+
+    Sirven de referencia de partida para el pronóstico: a principio de temporada,
+    con tres o cuatro jornadas jugadas, no hay forma de distinguir a un equipo de
+    otro, y sin esto todos los partidos saldrían prácticamente 50-50.
+    """
+    start, end = season_bounds(season)
+    out = []
+    for code in cfg["codes"]:
+        for a, b in month_chunks(start, end):
+            d = get(f"{ESPN}/{code}/scoreboard?dates={fmt(a)}-{fmt(b)}&limit=300")
+            for ev in ((d or {}).get("events") or []):
+                m = parse_event(ev, cfg["cup"], cfg["id"])
+                if m and m["st"] == "FT" and m["hs"] is not None:
+                    out.append({"h": m["h"], "a": m["a"], "hs": m["hs"], "as": m["as"]})
+            time.sleep(0.25)
+    return out
+
+
 def build_edition(cfg, season, ongoing, prev_ed, budget):
     """Descarga una edición completa. `budget` limita los resúmenes nuevos."""
     start, end = season_bounds(season)
@@ -298,12 +318,24 @@ def build_edition(cfg, season, ongoing, prev_ed, budget):
 
     for m in matches.values():
         m.pop("_code", None)
+
+    # Referencia de partida para el pronóstico mientras la temporada es joven.
+    played = sum(1 for m in matches.values() if m["st"] == "FT")
+    prior = prev_ed.get("prior") or []
+    if ongoing and played < 60:
+        if not prior or prev_ed.get("_prior_season") != season_label(date.today(), -1):
+            prior = fetch_prior_results(cfg, season_label(date.today(), -1))
+    elif not ongoing or played >= 60:
+        prior = []  # con media temporada jugada ya sobra con los datos propios
+
     return {
         "season": season, "ongoing": ongoing,
         "matches": sorted(matches.values(), key=lambda x: (x["dt"] or "", x["time"] or "")),
         "timelines": timelines, "stats": stats,
         "scorers": mk(goals), "assists": mk(assists),
+        "prior": prior,
         "_tally": tally,
+        "_prior_season": season_label(date.today(), -1) if prior else None,
     }, used
 
 
