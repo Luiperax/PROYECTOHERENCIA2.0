@@ -53,9 +53,14 @@ europea en curso (arranca en julio) y comprueba si la fuente ya publica partidos
   muestra la **última edición disputada** y la etiqueta como tal, tanto en la pestaña de la competición
   como en un aviso dentro de la página.
 
-En cuanto la nueva edición publica su primer partido, la app cambia a ella automáticamente, sin tocar
-el código. Al detectar el cambio de temporada, el recolector descarta la caché anterior para no mezclar
-ediciones.
+En cuanto la nueva edición publica su primer partido, la app pasa a ella automáticamente (como muy tarde
+en la siguiente ejecución programada, ~30 min), sin tocar el código.
+
+Durante ese relevo la edición anterior no se pierde: mientras la nueva copa lleve menos de 10 partidos
+jugados se descargan **las dos**, y aparece un selector de edición para moverse entre ellas. Así la
+página nunca se queda casi vacía justo después del cambio. Cuando la nueva edición ya está en marcha,
+la antigua deja de descargarse. En liga no se aplica, porque una temporada empieza con todos los equipos
+y no existe ese hueco.
 
 ## Actualización automática
 
