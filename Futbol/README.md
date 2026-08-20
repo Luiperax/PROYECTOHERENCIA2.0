@@ -16,6 +16,7 @@ su propio color de acento (LaLiga en rojo, Copa del Rey en dorado, Champions en 
 - **Equipos**: clasificación completa en LaLiga (PJ, G, E, P, GF, GC, DG, Pts y racha de forma) y, en las
   competiciones por eliminatorias, una tabla equivalente de rendimiento en el torneo.
 - **Goleadores** y **Asistentes**: rankings con barra proporcional y podio.
+- **Pronóstico** en los partidos por jugar: probabilidad de victoria local, empate o victoria visitante.
 - **Panel de cifras**: partidos jugados, goles, media de goles por partido y número de equipos.
 
 Tema **oscuro por defecto**, con botón para cambiar a claro (se recuerda la preferencia).
@@ -31,6 +32,23 @@ puntuación = goles × 2 + asistencias × 1
 
 Aparece siempre etiquetada como *calculada*. Si en el futuro se conecta una fuente que publique el premio
 oficial, se puede sustituir sin tocar el resto de la app.
+
+## El pronóstico
+
+En cada partido aún no disputado se muestra una barra con la probabilidad de los tres resultados
+(**1-X-2**). Sale de un modelo de Poisson que estima la fuerza atacante y defensiva de cada equipo a
+partir de los resultados de la propia competición y tiene en cuenta la **ventaja de jugar en casa**
+(se calculan por separado las medias de goles de local y de visitante).
+
+A principio de temporada no hay datos suficientes para distinguir a un equipo de otro —con tres
+jornadas jugadas todos los partidos saldrían casi 50-50—, así que el modelo se apoya además en los
+resultados de la **temporada anterior** con menos peso (cuentan un 35 %). Ese apoyo se retira solo en
+cuanto la competición supera los 60 partidos jugados. Los resultados anteriores se descargan sin
+detalle (solo marcadores), así que salen prácticamente gratis.
+
+Las probabilidades se refieren al resultado al final del **tiempo reglamentario**: en una eliminatoria,
+un empate significa que el partido llegaría a la prórroga, no que la eliminatoria acabe en tablas. Es
+una estimación, no una apuesta.
 
 ## Fuente de datos y cobertura
 
