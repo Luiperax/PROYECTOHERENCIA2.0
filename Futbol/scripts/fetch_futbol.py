@@ -120,17 +120,22 @@ def is_done(m):
 
 
 def fetch_tsdb_league(league_id, start, end, prev, throttle=0.35):
-    """Recorre día a día. Reutiliza días ya descargados cuyo contenido está cerrado."""
+    """Recorre día a día. Reutiliza los días ya descargados cuyo contenido está cerrado:
+    un día pasado no puede ganar partidos nuevos, y si los que tenía ya terminaron,
+    su resultado no va a cambiar. Eso incluye los días sin ningún partido, que son la
+    mayoría del calendario: no cachearlos obligaba a volver a pedirlos en cada ejecución."""
     prev_matches = {m["id"]: m for m in (prev.get("matches") or [])}
     prev_days = set(prev.get("_days_done") or [])
+    by_day = {}
+    for m in prev_matches.values():
+        by_day.setdefault(m.get("dt"), []).append(m)
     matches, days_done = {}, []
     today = date.today()
     d = start
     while d <= end:
         ds = d.isoformat()
-        # Un día pasado ya descargado y con todo terminado no hace falta repetirlo
-        cached = [m for m in prev_matches.values() if m.get("dt") == ds]
-        if ds in prev_days and d < today - timedelta(days=2) and cached and all(is_done(m) for m in cached):
+        cached = by_day.get(ds, [])
+        if ds in prev_days and d < today - timedelta(days=2) and all(is_done(m) for m in cached):
             for m in cached:
                 matches[m["id"]] = m
             days_done.append(ds)
@@ -331,49 +336,81 @@ def main():
     comps = []
 
     # ---- LaLiga y Copa del Rey (TheSportsDB) ----
+    def build_edition(league_id, season, ongoing, prev_ed, is_cup, cap):
+        s_start, s_end = season_bounds(season)
+        # de una temporada en curso solo interesa hasta mes y medio vista
+        end = min(s_end, today + timedelta(days=45)) if ongoing else s_end
+        ms, days = fetch_tsdb_league(league_id, s_start, end, prev_ed)
+        for x in ms.values():
+            x["rdn"] = round_name(x.get("rd"), is_cup)
+        tls, sts = fetch_tsdb_details(ms, prev_ed, limit_new=cap)
+        g, a = aggregate_from_timelines(tls)
+        return {"season": season, "ongoing": ongoing,
+                "matches": sorted(ms.values(), key=lambda x: (x["dt"] or "", x["time"] or "")),
+                "timelines": tls, "stats": sts, "scorers": g, "assists": a,
+                "_days_done": days}
+
     for cid, name, league_id, emoji, is_cup, cap in [
         ("laliga", "LaLiga", "4335", "🇪🇸", False, 60),
         ("copa", "Copa del Rey", "4483", "🏆", True, 40),
     ]:
         prev = prev_comps.get(cid, {})
-        season, ongoing = pick_tsdb_season(league_id, today)
-        s_start, s_end = season_bounds(season)
-        # de una temporada en curso solo interesa hasta mes y medio vista
-        end = min(s_end, today + timedelta(days=45)) if ongoing else s_end
-        # si cambia la temporada respecto a la anterior, no reutilizamos nada
-        if prev.get("season") and prev.get("season") != season:
-            prev = {}
-        ms, days = fetch_tsdb_league(league_id, s_start, end, prev)
-        for x in ms.values():
-            x["rdn"] = round_name(x.get("rd"), is_cup)
-        tls, sts = fetch_tsdb_details(ms, prev, limit_new=cap)
-        g, a = aggregate_from_timelines(tls)
-        comps.append({"id": cid, "name": name, "season": season, "emoji": emoji,
-                      "ongoing": ongoing,
-                      "matches": sorted(ms.values(), key=lambda x: (x["dt"] or "", x["time"] or "")),
-                      "timelines": tls, "stats": sts, "scorers": g, "assists": a,
-                      "partial": True, "_days_done": days})
-        print(f"{name} [{season}{'' if ongoing else ', última edición disputada'}]: "
-              f"{len(ms)} partidos, {len(tls)} con detalle", file=sys.stderr)
+        prev_eds = {e["season"]: e for e in (prev.get("editions") or [])}
+        current = season_label(today)
+        editions = []
+
+        # La edición de este año entra en cuanto la fuente publique algo de ella
+        if tsdb_season_has_matches(league_id, current):
+            editions.append(build_edition(league_id, current, True,
+                                          prev_eds.get(current, {}), is_cup, cap))
+
+        # En las copas pasan meses entre el fin de una edición y el inicio de la
+        # siguiente, así que mientras la nueva no haya arrancado de verdad conservamos
+        # la anterior para que la página no se quede vacía. En liga no hace falta: la
+        # temporada empieza con todos los equipos y no hay ese hueco.
+        played_now = sum(1 for m in (editions[0]["matches"] if editions else []) if is_done(m))
+        if not editions or (is_cup and played_now < 10):
+            previous = season_label(today, -1)
+            if tsdb_season_has_matches(league_id, previous):
+                editions.append(build_edition(league_id, previous, False,
+                                              prev_eds.get(previous, {}), is_cup, cap))
+
+        if not editions:
+            if prev:
+                comps.append(prev)
+            continue
+
+        comps.append({"id": cid, "name": name, "emoji": emoji, "partial": True,
+                      "season": editions[0]["season"], "ongoing": editions[0]["ongoing"],
+                      "editions": editions})
+        print(f"{name}: " + " | ".join(
+            f"{e['season']}{'' if e['ongoing'] else ' (última disputada)'}: "
+            f"{len(e['matches'])} partidos, {len(e['timelines'])} con detalle"
+            for e in editions), file=sys.stderr)
 
     # ---- Champions League (UEFA) ----
     up = prev_comps.get("ucl", {})
     ucl_season = season_label(today)
     season_year = int(ucl_season.split("-")[1])  # la UEFA nombra la temporada por su año final
-    if up.get("season") and up.get("season") != ucl_season:
-        up = {}
-    u = fetch_ucl(season_year, up)
+    prev_ucl_ed = {}
+    for e in (up.get("editions") or []):
+        if e.get("season") == ucl_season:
+            prev_ucl_ed = e
+    u = fetch_ucl(season_year, prev_ucl_ed)
     if u and u["matches"]:
-        comps.append({"id": "ucl", "name": "Champions League", "season": ucl_season, "emoji": "⭐",
-                      "ongoing": True,
-                      "matches": sorted(u["matches"].values(), key=lambda x: (x["dt"] or "", x["time"] or "")),
-                      "timelines": u["timelines"], "stats": u["stats"],
-                      "scorers": u["scorers"], "assists": u["assists"],
-                      "partial": False, "_pid_name": u["_pid_name"]})
+        comps.append({"id": "ucl", "name": "Champions League", "emoji": "⭐", "partial": False,
+                      "season": ucl_season, "ongoing": True,
+                      "editions": [{
+                          "season": ucl_season, "ongoing": True,
+                          "matches": sorted(u["matches"].values(),
+                                            key=lambda x: (x["dt"] or "", x["time"] or "")),
+                          "timelines": u["timelines"], "stats": u["stats"],
+                          "scorers": u["scorers"], "assists": u["assists"],
+                          "_pid_name": u["_pid_name"]}]})
         print(f"Champions [{ucl_season}]: {len(u['matches'])} partidos, "
               f"{len(u['timelines'])} con detalle", file=sys.stderr)
-    elif prev_comps.get("ucl"):
-        comps.append(prev_comps["ucl"])
+    elif up:
+        comps.append(up)
 
     data = {"competitions": comps, "updated": int(time.time())}
     with open(OUT, "w", encoding="utf-8") as f:
