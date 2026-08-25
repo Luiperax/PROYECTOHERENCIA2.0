@@ -98,10 +98,25 @@ def main():
         timelines[m["id"]] = evs
         time.sleep(0.2)
 
-    data = {"matches": matches, "timelines": timelines, "code2name": code2name,
-            "updated": int(time.time())}
+    payload = {"matches": matches, "timelines": timelines, "code2name": code2name}
+    body = json.dumps(payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+
+    # Solo se reescribe si el contenido cambió de verdad. Antes se guardaba siempre
+    # una marca de tiempo nueva, así que el fichero cambiaba en cada ejecución aunque
+    # los datos fueran idénticos, generando un commit y un push cada 15 minutos.
+    try:
+        with open(OUT, encoding="utf-8") as f:
+            old_data = json.load(f)
+        old_data.pop("updated", None)
+        if json.dumps(old_data, ensure_ascii=False, separators=(",", ":"), sort_keys=True) == body:
+            print("Sin cambios en los datos: no se reescribe", os.path.relpath(OUT))
+            return
+    except Exception:
+        pass
+
+    data = dict(payload, updated=int(time.time()))
     with open(OUT, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
+        json.dump(data, f, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
     played = sum(1 for m in matches if m["s"] == 0)
     print(f"OK: {len(matches)} partidos ({played} jugados), {len(timelines)} con detalle")
 

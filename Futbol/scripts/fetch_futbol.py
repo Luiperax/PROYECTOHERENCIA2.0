@@ -17,11 +17,14 @@ from datetime import date, timedelta
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "..", "data.json")
+CACHE = os.path.join(HERE, "..", "cache.json")
 ESPN = "https://site.api.espn.com/apis/site/v2/sports/soccer"
 
 # Cuántos resúmenes de partido nuevos se bajan como máximo en cada ejecución.
 # El resto entra en las siguientes: el objetivo es que un run programado no se eternice.
 MAX_NEW_SUMMARIES = 120
+# Intentos antes de dar por perdido el resumen de un partido concreto.
+MAX_SUMMARY_FAILS = 3
 
 COMPETITIONS = [
     {"id": "laliga", "name": "LaLiga", "emoji": "🇪🇸", "codes": ["esp.1"], "cup": False},
@@ -75,11 +78,23 @@ def get(url, tries=4):
 
 
 def load_prev():
+    """Estado anterior: los datos públicos más el estado interno de cache.json."""
     try:
         with open(OUT, encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
     except Exception:
         return {}
+    try:
+        with open(CACHE, encoding="utf-8") as f:
+            cache = {c["id"]: c for c in (json.load(f).get("competitions") or [])}
+    except Exception:
+        cache = {}
+    for c in (data.get("competitions") or []):
+        ce = {e.get("season"): e for e in ((cache.get(c["id"]) or {}).get("editions") or [])}
+        for e in (c.get("editions") or []):
+            e.update({k: v for k, v in (ce.get(e.get("season")) or {}).items()
+                      if k.startswith("_")})
+    return data
 
 
 def season_label(d, offset=0):
@@ -260,6 +275,7 @@ def build_edition(cfg, season, ongoing, prev_ed, budget):
     prev_tl = prev_ed.get("timelines") or {}
     prev_st = prev_ed.get("stats") or {}
     prev_tally = prev_ed.get("_tally") or {}
+    fails = dict(prev_ed.get("_fails") or {})
 
     timelines, stats, tally = {}, {}, {}
     pending = []
@@ -271,7 +287,7 @@ def build_edition(cfg, season, ongoing, prev_ed, budget):
             if mid in prev_st:
                 stats[mid] = prev_st[mid]
             tally[mid] = prev_tally[mid]
-        else:
+        elif fails.get(mid, 0) < MAX_SUMMARY_FAILS:
             pending.append(mid)
 
     pending.sort(key=lambda i: matches[i].get("dt") or "", reverse=True)
@@ -280,13 +296,18 @@ def build_edition(cfg, season, ongoing, prev_ed, budget):
         if used >= budget:
             break
         evs, sts, tly = fetch_summary(matches[mid]["_code"], mid)
+        used += 1
         if evs is None:
+            # Un partido cuyo resumen no llega nunca (ESPN no lo publica) se reintentaba
+            # en cada ejecución para siempre, gastando cupo. Se cuentan los intentos y
+            # se deja de insistir tras unos cuantos.
+            fails[mid] = fails.get(mid, 0) + 1
             continue
+        fails.pop(mid, None)
         timelines[mid] = evs
         if sts:
             stats[mid] = sts
         tally[mid] = tly
-        used += 1
         time.sleep(0.25)
 
     # Goles y asistencias: preferimos las estadísticas por jugador, pero en muchos
@@ -335,6 +356,7 @@ def build_edition(cfg, season, ongoing, prev_ed, budget):
         "scorers": mk(goals), "assists": mk(assists),
         "prior": prior,
         "_tally": tally,
+        "_fails": {k: v for k, v in fails.items() if v},
         "_prior_season": season_label(date.today(), -1) if prior else None,
     }, used
 
@@ -395,10 +417,60 @@ def main():
             f"{len(e['scorers'])} goleadores, {len(e['assists'])} asistentes"
             for e in editions), file=sys.stderr)
 
-    data = {"competitions": comps, "updated": int(time.time())}
-    with open(OUT, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
-    print("OK ->", os.path.relpath(OUT))
+    write_output(comps)
+
+
+def write_output(comps):
+    """Escribe data.json (público) y cache.json (estado interno).
+
+    Solo reescribe si el contenido cambió de verdad. Antes se guardaba siempre una
+    marca de tiempo nueva, así que el fichero cambiaba en cada ejecución aunque los
+    datos fueran idénticos: eso generaba un commit y un push cada 15 minutos y era
+    lo que provocaba las colisiones entre los dos workflows.
+    """
+    public, cache = [], []
+    for c in comps:
+        pc = {k: v for k, v in c.items() if not k.startswith("_")}
+        pc["editions"] = []
+        cc = {"id": c["id"], "editions": []}
+        for e in (c.get("editions") or []):
+            pc["editions"].append({k: v for k, v in e.items() if not k.startswith("_")})
+            cc["editions"].append({"season": e.get("season"),
+                                   **{k: v for k, v in e.items() if k.startswith("_")}})
+        public.append(pc)
+        cache.append(cc)
+
+    def dump(obj):
+        # sort_keys hace la salida determinista: el orden de las claves depende de si
+        # cada partido se descargó o se leyó de la caché, y sin esto dos ejecuciones
+        # con los mismos datos producían bytes distintos y un commit inútil.
+        return json.dumps(obj, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+
+    changed = True
+    try:
+        with open(OUT, encoding="utf-8") as f:
+            old = json.load(f)
+        changed = dump(old.get("competitions")) != dump(public)
+    except Exception:
+        pass
+
+    if changed:
+        stamp = int(time.time())
+        with open(OUT, "w", encoding="utf-8") as f:
+            f.write(dump({"competitions": public, "updated": stamp}))
+        print("Datos actualizados ->", os.path.relpath(OUT))
+    else:
+        print("Sin cambios en los datos: no se reescribe", os.path.relpath(OUT))
+
+    new_cache = dump({"competitions": cache})
+    try:
+        with open(CACHE, encoding="utf-8") as f:
+            if f.read() == new_cache:
+                return
+    except Exception:
+        pass
+    with open(CACHE, "w", encoding="utf-8") as f:
+        f.write(new_cache)
 
 
 if __name__ == "__main__":

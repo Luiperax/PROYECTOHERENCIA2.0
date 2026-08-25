@@ -221,7 +221,7 @@ var SEED = /*seed*/{"matches":[{"id":"400021443","stage":"289273","g":"A","st":"
   var CID="17", SID="285023", LANG="es";
   var API="https://api.fifa.com/api/v3";
   var DATA_URL="data.json"; // datos refrescados en el servidor (mismo origen: no lo bloquean Brave/CORS)
-  var REFRESH_MS=90000, REQ_TIMEOUT=13000, THROTTLE_MS=140;
+  var REFRESH_MS=600000, REQ_TIMEOUT=13000, THROTTLE_MS=140;
   var CACHE_KEY="wc2026_fifa_v2";
   var STAGE_ORDER={"Grupos":1,"Dieciseisavos":2,"Octavos":3,"Cuartos":4,"Semifinal":5,"Tercer puesto":6,"Final":7};
 
@@ -531,17 +531,22 @@ var SEED = /*seed*/{"matches":[{"id":"400021443","stage":"289273","g":"A","st":"
   var syncDot=document.getElementById("syncDot"),syncText=document.getElementById("syncText"),progBar=document.getElementById("progBar");
   function setSync(t,busy){ syncText.textContent=t; syncDot.className="sync-dot"+(busy?" busy":""); }
   var syncing=false;
-  function finishSync(){
+  function finishSync(sinCambios){
     progBar.style.width="100%"; setTimeout(function(){progBar.style.width="0%";},400);
     cache.lastSync=Date.now(); save();
     document.getElementById("lastSync").textContent=new Date().toLocaleTimeString("es-ES");
     setSync("Al día · "+new Date().toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}),false);
-    syncing=false; renderAll();
+    syncing=false;
+    if(!sinCambios) renderAll();
   }
   // 1º intenta el data.json del servidor (mismo origen, no lo bloquea Brave); ya trae goles y asistencias
+  var sinCambios=false;
   function loadServer(){
     return fetchT(DATA_URL+"?t="+Date.now()).then(function(r){return r.ok?r.json():null;}).then(function(d){
       if(!d||!d.matches||!d.matches.length) return false;
+      // Si el servidor no ha publicado nada nuevo evitamos repintar: hacerlo cerraba
+      // el detalle del partido que estuvieras leyendo.
+      sinCambios = !!(cache.serverUpdated && d.updated===cache.serverUpdated);
       d.matches.forEach(function(m){ cache.matches[m.id]=m; });
       if(d.timelines) Object.keys(d.timelines).forEach(function(id){ cache.tl[id]=d.timelines[id]; });
       if(d.code2name) Object.keys(d.code2name).forEach(function(c){ CODE2NAME[c]=d.code2name[c]; });
@@ -552,7 +557,7 @@ var SEED = /*seed*/{"matches":[{"id":"400021443","stage":"289273","g":"A","st":"
     if(syncing)return; syncing=true; setSync("Actualizando…",true); progBar.style.width="20%";
     loadServer().then(function(ok){
       progBar.style.width="60%";
-      if(ok){ finishSync(); return; }
+      if(ok){ finishSync(sinCambios); return; }
       // 2º respaldo: API de FIFA directa (puede fallar en navegadores con bloqueadores)
       enq(API+"/calendar/matches?idCompetition="+CID+"&idSeason="+SID+"&language="+LANG+"&count=500").then(function(d){
         if(d&&d.Results){ d.Results.forEach(function(x){ var m=mapMatch(x); cache.matches[m.id]=m; }); save(); }

@@ -31,11 +31,22 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if [ -n "$(git status --porcelain Futbol/data.json)" ]; then
-            git add Futbol/data.json
-            git commit -m "Actualizar datos de fútbol [skip ci]"
-            git push
-            echo "Datos actualizados y publicados."
-          else
+          if [ -z "$(git status --porcelain Futbol/data.json Futbol/cache.json)" ]; then
             echo "Sin cambios en los datos."
+            exit 0
           fi
+          git add Futbol/data.json Futbol/cache.json
+          git commit -m "Actualizar datos de fútbol [skip ci]"
+          # El otro workflow escribe en la misma rama: si se cruzan, hay que
+          # reintegrar lo suyo antes de empujar en vez de fallar.
+          for intento in 1 2 3 4 5; do
+            if git push; then
+              echo "Datos publicados (intento $intento)."
+              exit 0
+            fi
+            echo "Push rechazado; reintegrando cambios remotos e intentando de nuevo…"
+            git pull --rebase --autostash origin main || exit 1
+            sleep $((intento * 3))
+          done
+          echo "::error::No se pudo publicar tras varios intentos."
+          exit 1
